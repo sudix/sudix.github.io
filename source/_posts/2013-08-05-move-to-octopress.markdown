@@ -201,7 +201,18 @@ footer: true
 ## 記事の編集と公開
 あとはmarkdown形式で記事を書き、generateとdeployを実行すれば、記事が公開されます。
 
+## おまけ コードスニペットの書き方
+gist使ったり色々と書き方はあるみたいです。  
+参考:[http://octopress.org/docs/blogging/code/](http://octopress.org/docs/blogging/code/)  
+バッククォートで囲み、言語も指定可能です。
 
+    ```ruby Test.rb
+    def hoge
+      puts "hogefuga"
+      1 + 2
+    end
+    ```
+と書けば、以下のように。
 ```ruby Test.rb
 def hoge
   puts "hogefuga"
@@ -209,6 +220,15 @@ def hoge
 end
 ```
 
+Scalaだって  
+    ```scala Hoge.scala
+    object Hoge {
+      def main(string: Args) {
+        println("hoge")
+      }
+    }
+    ```
+↓  
 ```scala Hoge.scala
 object Hoge {
   def main(string: Args) {
@@ -216,5 +236,6 @@ object Hoge {
   }
 }
 ```
+綺麗に表示されて楽しいですね！  
 
 
