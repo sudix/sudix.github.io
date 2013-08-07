@@ -2,15 +2,322 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Sudix's Blog]]></title>
-  <link href="http://yoursite.com/atom.xml" rel="self"/>
-  <link href="http://yoursite.com/"/>
-  <updated>2013-08-02T18:22:16+09:00</updated>
-  <id>http://yoursite.com/</id>
+  <link href="http://sudix.github.io/atom.xml" rel="self"/>
+  <link href="http://sudix.github.io/"/>
+  <updated>2013-08-07T16:07:46+09:00</updated>
+  <id>http://sudix.github.io/</id>
   <author>
     <name><![CDATA[sudix]]></name>
     <email><![CDATA[sudix7755@gmail.com]]></email>
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[octopress始めました]]></title>
+    <link href="http://sudix.github.io/blog/2013/08/05/move-to-octopress/"/>
+    <updated>2013-08-05T16:42:00+09:00</updated>
+    <id>http://sudix.github.io/blog/2013/08/05/move-to-octopress</id>
+    <content type="html"><![CDATA[<p>これまではてなダイアリーを使ってきましたが、<br/>
+octopressを知って面白そうだったので導入してみました。<br/>
+「A blogging framework for hackers.」<br/>
+とか言われたら使うしかないですよね。<br/>
+導入も簡単だし、markdownで記事書けるし楽しそうなので、<br/>
+しばらく使ってみます。</p>
+
+<hr />
+
+<h1>参考にさせていただいたサイト</h1>
+
+<p><a href="http://onigra.github.io/blog/2013/04/28/introduction-of-octopress/">OctopressとGitHub Pagesを使用したブログの構築手順</a></p>
+
+<p><a href="http://randd.kwappa.net/2013/04/16/521">Octopress で GitHub Pages を置き換える</a></p>
+
+<hr />
+
+<h1>環境</h1>
+
+<ul>
+<li>Ubuntu 13.04</li>
+<li>Ruby 1.9.3</li>
+</ul>
+
+
+<hr />
+
+<h1>Octpressの設定</h1>
+
+<h2>Octopressをfork</h2>
+
+<p>Octopressをダウンロードする前に、自分のリポジトリにforkしておくのをお勧めします。<br/>
+いきなりcloneしてもいいのですが、forkしておけば変更後そのままpushすることで、<br/>
+GitHub上でソースを管理することができます。<br/>
+<a href="https://github.com/imathis/octopress">こちら</a>からforkしましょう。</p>
+
+<h2>Octopressをダウンロード</h2>
+
+<p>cloneするだけです。</p>
+
+<figure class='code'><figcaption><span>Octopressのダウンロード</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>git clone git@github.com:sudix/octopress.git
+</span><span class='line'><span class="nv">$ </span><span class="nb">cd </span>octopress
+</span><span class='line'><span class="nv">$ </span><span class="nb">echo</span> <span class="s2">&quot;1.9.3-debian&quot;</span> | cat &gt; .rbenv-version <span class="c">#rewrite for ubuntu&#39;s ruby version</span>
+</span><span class='line'><span class="nv">$ </span>bundle install --path vendor/bundle
+</span><span class='line'><span class="nv">$ </span>bundle <span class="nb">exec </span>rake install
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>初期設定</h2>
+
+<p>rubyのバージョン設定と、必要なgemのインストールを実行します。<br/>
+rubyのバージョン設定は自分の環境に合わせて.rbenv-versionを書き換える事になります。<br/>
+自分の環境だとubuntuのパッケージから入れたので「1.9.3-debian」となります。<br/>
+これを設定しておかないと動きません。<br/>
+また、gemのインストールはbundlerを使って、vendor/bundle以下にインストールしています。<br/>
+参考：<a href="http://octopress.org/docs/setup/">http://octopress.org/docs/setup/</a></p>
+
+<figure class='code'><figcaption><span>Octopressの初期設定</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span><span class="nb">cd </span>octopress
+</span><span class='line'><span class="nv">$ </span><span class="nb">echo</span> <span class="s2">&quot;1.9.3-debian&quot;</span> &gt; .rbenv-version
+</span><span class='line'><span class="nv">$ </span>sudo gem install bundler
+</span><span class='line'><span class="nv">$ </span>bundle install --path vendor/bundle
+</span><span class='line'><span class="nv">$ </span>bundle <span class="nb">exec </span>rake install
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>プレビュー</h2>
+
+<p>以下のコマンドを実行します。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>bundle <span class="nb">exec </span>rake preview
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>これで次のURLでプレビューできるようになります。<br/>
+<a href="http://localhost:4000/">http://localhost:4000/</a></p>
+
+<h2>テーマ</h2>
+
+<p>テーマの設定が可能です。以下からお好みのテーマを探してみてください。<br/>
+<a href="https://github.com/imathis/octopress/wiki/3rd-Party-Octopress-Themes">3rd party themes</a></p>
+
+<p>今回はこのテーマを使ってみます。<br/>
+<a href="https://github.com/shashankmehta/greyshade">greyshade</a></p>
+
+<figure class='code'><figcaption><span>テーマのインストール</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>git clone git@github.com:shashankmehta/greyshade.git .themes/greyshade
+</span><span class='line'><span class="nv">$ </span><span class="nb">echo</span> <span class="s2">&quot;\$greyshade: #073642;&quot;</span> &gt;&gt; sass/custom/_colors.scss //Substitue <span class="s1">&#39;color&#39;</span> with your highlight color
+</span><span class='line'><span class="nv">$ </span>bundle <span class="nb">exec </span>rake <span class="s2">&quot;install[greyshade]&quot;</span>
+</span><span class='line'><span class="nv">$ </span>bundle <span class="nb">exec </span>rake generate
+</span><span class='line'><span class="nv">$ </span>bundle <span class="nb">exec </span>rake preview
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>コンフィグ</h2>
+
+<p>参考:<a href="http://octopress.org/docs/configuring/">http://octopress.org/docs/configuring/</a><br/>
+_config.ymlを編集し、各種設定を行います。変更した箇所だけを抜粋しています。</p>
+
+<figure class='code'><figcaption><span>_config.yml</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="l-Scalar-Plain">url</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">http://sudix.github.io</span>
+</span><span class='line'><span class="l-Scalar-Plain">title</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">Sudix Blog</span>
+</span><span class='line'><span class="l-Scalar-Plain">subtitle</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">my blog about programming, IT, etc...</span>
+</span><span class='line'><span class="l-Scalar-Plain">author</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">sudix</span>
+</span><span class='line'><span class="l-Scalar-Plain">description</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">about programming, IT, etc...</span>
+</span><span class='line'><span class="l-Scalar-Plain">date_format</span><span class="p-Indicator">:</span> <span class="s">&quot;%Y/%m/%d&quot;</span>
+</span><span class='line'><span class="l-Scalar-Plain">email</span><span class="p-Indicator">:</span> <span class="s">&quot;youremailaddress@example.com&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<hr />
+
+<h1>Githubの設定</h1>
+
+<h2>create repository</h2>
+
+<p>手順:<a href="http://octopress.org/docs/deploying/github/">http://octopress.org/docs/deploying/github/</a></p>
+
+<p>Github pages用のリポジトリを作っておく必要があります。<br/>
+「自分のユーザー名.github.io」という名前のリポジトリになります。<br/>
+自分の場合だと「sudix.github.io」ですね。<br/>
+octopressの上記手順で説明のある.comではなく.ioで作る必要があるようです。<br/>
+昔と変わったのでしょうか。<br/>
+<a href="https://help.github.com/articles/user-organization-and-project-pages">Github Pagesのマニュアル</a></p>
+
+<p>リポジトリ作成はこちらから。<a href="https://github.com/new">https://github.com/new</a></p>
+
+<hr />
+
+<h1>デプロイ＆公開</h1>
+
+<p>いよいよ公開してみます。</p>
+
+<h2>リポジトリの登録</h2>
+
+<p>rake setup_github_pagesを実行するとRepository urlを入力しろと聞かれるので、<br/>
+先ほど作ったリポジトリ（git@github.com:sudix/sudix.github.io）を入力します。</p>
+
+<figure class='code'><figcaption><span>リポジトリの登録</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>bundle <span class="nb">exec </span>rake setup_github_pages
+</span><span class='line'>Enter the <span class="nb">read</span>/write url <span class="k">for </span>your repository
+</span><span class='line'><span class="o">(</span>For example, <span class="s1">&#39;git@github.com:your_username/your_username.github.io)</span>
+</span><span class='line'><span class="s1">           or &#39;</span>https://github.com/your_username/your_username.github.io<span class="err">&#39;</span><span class="o">)</span>
+</span><span class='line'>Repository url: git@github.com:sudix/sudix.github.io
+</span><span class='line'>rm -rf _deploy
+</span><span class='line'>mkdir _deploy
+</span><span class='line'><span class="nb">cd </span>_deploy
+</span><span class='line'>Initialized empty Git repository in /home/sudix/apps/octopress/_deploy/.git/
+</span><span class='line'><span class="o">[</span>master <span class="o">(</span>root-commit<span class="o">)</span> 5a3c02f<span class="o">]</span> Octopress init
+</span><span class='line'> 1 file changed, 1 insertion<span class="o">(</span>+<span class="o">)</span>
+</span><span class='line'> create mode 100644 index.html
+</span><span class='line'><span class="nb">cd</span> -
+</span><span class='line'>---
+</span><span class='line'><span class="c">## Now you can deploy to http://sudix.github.io/sudix with `rake deploy` ##</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>デプロイ</h2>
+
+<p>以下のコマンドでデプロイされます。</p>
+
+<figure class='code'><figcaption><span>デプロイ実行</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>bundle <span class="nb">exec </span>rake deploy
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>公開されたか確認</h3>
+
+<p>Github Pagesを開いてみて、公開されたか確認してみましょう。<br/>
+なお、デプロイして10分ほど待つ必要があるみたいです。<br/>
+<a href="http://sudix.github.io/">http://sudix.github.io/</a></p>
+
+<hr />
+
+<h1>コメント欄を追加</h1>
+
+<p><a href="http://disqus.com/">DISQUS</a>を使って、コメント欄を追加することもできます。<br/>
+<a href="http://disqus.com/">DISQUS</a>に登録するとshort nameが発行されるので、<br/>
+それを_config.ymlに設定するだけです。</p>
+
+<figure class='code'><figcaption><span>_config.yml</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="c1"># Disqus Comments                                                                                                                       </span>
+</span><span class='line'><span class="l-Scalar-Plain">disqus_short_name</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">sudixsblog</span>
+</span><span class='line'><span class="l-Scalar-Plain">disqus_show_comment_count</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">false</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>追加した後、generateし直せば、下にコメント欄が表示されるはずです。</p>
+
+<hr />
+
+<h1>記事を書く</h1>
+
+<p>さっそく記事を書いてみましょう。
+手順:<a href="http://octopress.org/docs/blogging/">http://octopress.org/docs/blogging/</a></p>
+
+<h2>ファイル作成</h2>
+
+<p>rakeでnew_postを実行すれば記事を記入するためのmarkdownファイルが作成されます。<br/>
+new_postの後にタイトルを入力しましょう。<br/>
+ここで指定したタイトルを使ってパーマネントリンクが作成されます。<br/>
+タイトルは日本語不可のようです。</p>
+
+<figure class='code'><figcaption><span>記事の作成</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>rake new_post<span class="o">[</span><span class="s2">&quot;my first octopress article&quot;</span><span class="o">]</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>タイトルの編集</h2>
+
+<p>作成されたファイルを開くと、先頭にyamlで記述された設定があるので、<br/>
+タイトルを変更したい場合はその中のtitleを編集します。</p>
+
+<figure class='code'><figcaption><span>yyyy-mm-dd-my-first-octopress-article.markdown</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='yaml'><span class='line'><span class="nn">---</span>
+</span><span class='line'><span class="l-Scalar-Plain">layout</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">page</span>
+</span><span class='line'><span class="l-Scalar-Plain">title</span><span class="p-Indicator">:</span> <span class="s">&quot;Octopressでの初めての記事&quot;</span>
+</span><span class='line'><span class="l-Scalar-Plain">date</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">2013-08-06 20:59</span>
+</span><span class='line'><span class="l-Scalar-Plain">comments</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">true</span>
+</span><span class='line'><span class="l-Scalar-Plain">sharing</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">true</span>
+</span><span class='line'><span class="l-Scalar-Plain">footer</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">true</span>
+</span><span class='line'><span class="nn">---</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>記事の編集と公開</h2>
+
+<p>あとはmarkdown形式で記事を書き、generateとdeployを実行すれば、記事が公開されます。</p>
+
+<figure class='code'><figcaption><span>Test.rb</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="k">def</span> <span class="nf">hoge</span>
+</span><span class='line'>  <span class="nb">puts</span> <span class="s2">&quot;hogefuga&quot;</span>
+</span><span class='line'>  <span class="mi">1</span> <span class="o">+</span> <span class="mi">2</span>
+</span><span class='line'><span class="k">end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span>Hoge.scala</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="k">object</span> <span class="nc">Hoge</span> <span class="o">{</span>
+</span><span class='line'>  <span class="k">def</span> <span class="n">main</span><span class="o">(</span><span class="n">string</span><span class="k">:</span> <span class="kt">Args</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>    <span class="n">println</span><span class="o">(</span><span class="s">&quot;hoge&quot;</span><span class="o">)</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+]]></content>
+  </entry>
   
 </feed>

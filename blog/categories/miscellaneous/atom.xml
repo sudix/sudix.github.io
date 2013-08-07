@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: miscellaneous | Sudix's Blog]]></title>
+  <link href="http://sudix.github.io/blog/categories/miscellaneous/atom.xml" rel="self"/>
+  <link href="http://sudix.github.io/"/>
+  <updated>2013-08-07T16:07:46+09:00</updated>
+  <id>http://sudix.github.io/</id>
+  <author>
+    <name><![CDATA[sudix]]></name>
+    <email><![CDATA[sudix7755@gmail.com]]></email>
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[octopress始めました]]></title>
+    <link href="http://sudix.github.io/blog/2013/08/05/move-to-octopress/"/>
+    <updated>2013-08-05T16:42:00+09:00</updated>
+    <id>http://sudix.github.io/blog/2013/08/05/move-to-octopress</id>
+    <content type="html"><![CDATA[<p>これまではてなダイアリーを使ってきましたが、<br/>
+octopressを知って面白そうだったので導入してみました。<br/>
+「A blogging framework for hackers.」<br/>
+とか言われたら使うしかないですよね。<br/>
+導入も簡単だし、markdownで記事書けるし楽しそうなので、<br/>
+しばらく使ってみます。</p>
+
+<hr />
+
+<h1>参考にさせていただいたサイト</h1>
+
+<p><a href="http://onigra.github.io/blog/2013/04/28/introduction-of-octopress/">OctopressとGitHub Pagesを使用したブログの構築手順</a></p>
+
+<p><a href="http://randd.kwappa.net/2013/04/16/521">Octopress で GitHub Pages を置き換える</a></p>
+
+<hr />
+
+<h1>環境</h1>
+
+<ul>
+<li>Ubuntu 13.04</li>
+<li>Ruby 1.9.3</li>
+</ul>
+
+
+<hr />
+
+<h1>Octpressの設定</h1>
+
+<h2>Octopressをfork</h2>
+
+<p>Octopressをダウンロードする前に、自分のリポジトリにforkしておくのをお勧めします。<br/>
+いきなりcloneしてもいいのですが、forkしておけば変更後そのままpushすることで、<br/>
+GitHub上でソースを管理することができます。<br/>
+<a href="https://github.com/imathis/octopress">こちら</a>からforkしましょう。</p>
+
+<h2>Octopressをダウンロード</h2>
+
+<p>cloneするだけです。<br/>
+<code>bash Octopressのダウンロード
+$ git clone git@github.com:sudix/octopress.git
+$ cd octopress
+$ echo "1.9.3-debian" | cat &gt; .rbenv-version #rewrite for ubuntu's ruby version
+$ bundle install --path vendor/bundle
+$ bundle exec rake install
+</code></p>
+
+<h2>初期設定</h2>
+
+<p>rubyのバージョン設定と、必要なgemのインストールを実行します。<br/>
+rubyのバージョン設定は自分の環境に合わせて.rbenv-versionを書き換える事になります。<br/>
+自分の環境だとubuntuのパッケージから入れたので「1.9.3-debian」となります。<br/>
+これを設定しておかないと動きません。<br/>
+また、gemのインストールはbundlerを使って、vendor/bundle以下にインストールしています。<br/>
+参考：<a href="http://octopress.org/docs/setup/">http://octopress.org/docs/setup/</a><br/>
+<code>bash Octopressの初期設定
+$ cd octopress
+$ echo "1.9.3-debian" &gt; .rbenv-version
+$ sudo gem install bundler
+$ bundle install --path vendor/bundle
+$ bundle exec rake install
+</code></p>
+
+<h2>プレビュー</h2>
+
+<p>以下のコマンドを実行します。
+<code>bash
+bundle exec rake preview
+</code>
+これで次のURLでプレビューできるようになります。<br/>
+<a href="http://localhost:4000/">http://localhost:4000/</a></p>
+
+<h2>テーマ</h2>
+
+<p>テーマの設定が可能です。以下からお好みのテーマを探してみてください。<br/>
+<a href="https://github.com/imathis/octopress/wiki/3rd-Party-Octopress-Themes">3rd party themes</a></p>
+
+<p>今回はこのテーマを使ってみます。<br/>
+<a href="https://github.com/shashankmehta/greyshade">greyshade</a></p>
+
+<p><code>bash テーマのインストール
+$ git clone git@github.com:shashankmehta/greyshade.git .themes/greyshade
+$ echo "\$greyshade: #073642;" &gt;&gt; sass/custom/_colors.scss //Substitue 'color' with your highlight color
+$ bundle exec rake "install[greyshade]"
+$ bundle exec rake generate
+$ bundle exec rake preview
+</code></p>
+
+<h2>コンフィグ</h2>
+
+<p>参考:<a href="http://octopress.org/docs/configuring/">http://octopress.org/docs/configuring/</a><br/>
+_config.ymlを編集し、各種設定を行います。変更した箇所だけを抜粋しています。<br/>
+<code>yaml _config.yml
+url: http://sudix.github.io
+title: Sudix Blog
+subtitle: my blog about programming, IT, etc...
+author: sudix
+description: about programming, IT, etc...
+date_format: "%Y/%m/%d"
+email: "youremailaddress@example.com"
+</code></p>
+
+<hr />
+
+<h1>Githubの設定</h1>
+
+<h2>create repository</h2>
+
+<p>手順:<a href="http://octopress.org/docs/deploying/github/">http://octopress.org/docs/deploying/github/</a></p>
+
+<p>Github pages用のリポジトリを作っておく必要があります。<br/>
+「自分のユーザー名.github.io」という名前のリポジトリになります。<br/>
+自分の場合だと「sudix.github.io」ですね。<br/>
+octopressの上記手順で説明のある.comではなく.ioで作る必要があるようです。<br/>
+昔と変わったのでしょうか。<br/>
+<a href="https://help.github.com/articles/user-organization-and-project-pages">Github Pagesのマニュアル</a></p>
+
+<p>リポジトリ作成はこちらから。<a href="https://github.com/new">https://github.com/new</a></p>
+
+<hr />
+
+<h1>デプロイ＆公開</h1>
+
+<p>いよいよ公開してみます。</p>
+
+<h2>リポジトリの登録</h2>
+
+<p>rake setup_github_pagesを実行するとRepository urlを入力しろと聞かれるので、<br/>
+先ほど作ったリポジトリ（git@github.com:sudix/sudix.github.io）を入力します。</p>
+
+<p>```bash リポジトリの登録
+$ bundle exec rake setup_github_pages
+Enter the read/write url for your repository
+(For example, &lsquo;git@github.com:your_username/your_username.github.io)</p>
+
+<pre><code>       or 'https://github.com/your_username/your_username.github.io')
+</code></pre>
+
+<p>Repository url: git@github.com:sudix/sudix.github.io
+rm -rf <em>deploy
+mkdir </em>deploy
+cd <em>deploy
+Initialized empty Git repository in /home/sudix/apps/octopress/</em>deploy/.git/
+[master (root-commit) 5a3c02f] Octopress init
+ 1 file changed, 1 insertion(+)
+ create mode 100644 index.html</p>
+
+<h2>cd &ndash;</h2>
+
+<h2>Now you can deploy to <a href="http://sudix.github.io/sudix">http://sudix.github.io/sudix</a> with <code>rake deploy</code></h2>
+
+<p>```</p>
+
+<h2>デプロイ</h2>
+
+<p>以下のコマンドでデプロイされます。
+<code>bash デプロイ実行
+$ bundle exec rake deploy
+</code></p>
+
+<h3>公開されたか確認</h3>
+
+<p>Github Pagesを開いてみて、公開されたか確認してみましょう。<br/>
+なお、デプロイして10分ほど待つ必要があるみたいです。<br/>
+<a href="http://sudix.github.io/">http://sudix.github.io/</a></p>
+
+<hr />
+
+<h1>コメント欄を追加</h1>
+
+<p><a href="http://disqus.com/">DISQUS</a>を使って、コメント欄を追加することもできます。<br/>
+<a href="http://disqus.com/">DISQUS</a>に登録するとshort nameが発行されるので、<br/>
+それを_config.ymlに設定するだけです。</p>
+
+<p>```yaml _config.yml</p>
+
+<h1>Disqus Comments</h1>
+
+<p>disqus_short_name: sudixsblog
+disqus_show_comment_count: false
+```
+追加した後、generateし直せば、下にコメント欄が表示されるはずです。</p>
+
+<hr />
+
+<h1>記事を書く</h1>
+
+<p>さっそく記事を書いてみましょう。
+手順:<a href="http://octopress.org/docs/blogging/">http://octopress.org/docs/blogging/</a></p>
+
+<h2>ファイル作成</h2>
+
+<p>rakeでnew_postを実行すれば記事を記入するためのmarkdownファイルが作成されます。<br/>
+new_postの後にタイトルを入力しましょう。<br/>
+ここで指定したタイトルを使ってパーマネントリンクが作成されます。<br/>
+タイトルは日本語不可のようです。</p>
+
+<p><code>sh 記事の作成
+$ rake new_post["my first octopress article"]
+</code></p>
+
+<h2>タイトルの編集</h2>
+
+<p>作成されたファイルを開くと、先頭にyamlで記述された設定があるので、<br/>
+タイトルを変更したい場合はその中のtitleを編集します。</p>
+
+<h2>```yaml yyyy-mm-dd-my-first-octopress-article.markdown</h2>
+
+<p>layout: page
+title: &ldquo;Octopressでの初めての記事&rdquo;
+date: 2013-08-06 20:59
+comments: true
+sharing: true</p>
+
+<h2>footer: true</h2>
+
+<p>```</p>
+
+<h2>記事の編集と公開</h2>
+
+<p>あとはmarkdown形式で記事を書き、generateとdeployを実行すれば、記事が公開されます。</p>
+
+<p><code>ruby Test.rb
+def hoge
+  puts "hogefuga"
+  1 + 2
+end
+</code></p>
+
+<p>```scala Hoge.scala
+object Hoge {
+  def main(string: Args) {</p>
+
+<pre><code>println("hoge")
+</code></pre>
+
+<p>  }
+}
+```</p>
+]]></content>
+  </entry>
+  
+</feed>
