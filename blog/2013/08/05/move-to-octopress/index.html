@@ -363,6 +363,22 @@ new_postの後にタイトルを入力しましょう。<br/>
 
 <p>あとはmarkdown形式で記事を書き、generateとdeployを実行すれば、記事が公開されます。</p>
 
+<h2>おまけ コードスニペットの書き方</h2>
+
+<p>gist使ったり色々と書き方はあるみたいです。<br/>
+参考:<a href="http://octopress.org/docs/blogging/code/">http://octopress.org/docs/blogging/code/</a><br/>
+バッククォートで囲み、言語も指定可能です。</p>
+
+<pre><code>```ruby Test.rb
+def hoge
+  puts "hogefuga"
+  1 + 2
+end
+```
+</code></pre>
+
+<p>と書けば、以下のように。</p>
+
 <figure class='code'><figcaption><span>Test.rb</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
@@ -374,7 +390,18 @@ new_postの後にタイトルを入力しましょう。<br/>
 </span></code></pre></td></tr></table></div></figure>
 
 
+<p>Scalaだって</p>
 
+<pre><code>```scala Hoge.scala
+object Hoge {
+  def main(string: Args) {
+    println("hoge")
+  }
+}
+```
+</code></pre>
+
+<p>↓</p>
 
 <figure class='code'><figcaption><span>Hoge.scala</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -389,7 +416,7 @@ new_postの後にタイトルを入力しましょう。<br/>
 </span></code></pre></td></tr></table></div></figure>
 
 
-
+<p>綺麗に表示されて楽しいですね！</p>
 </div>
 
 </article>
