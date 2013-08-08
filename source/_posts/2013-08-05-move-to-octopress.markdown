@@ -40,10 +40,6 @@ GitHub上でソースを管理することができます。
 cloneするだけです。  
 ```bash Octopressのダウンロード
 $ git clone git@github.com:sudix/octopress.git
-$ cd octopress
-$ echo "1.9.3-debian" | cat > .rbenv-version #rewrite for ubuntu's ruby version
-$ bundle install --path vendor/bundle
-$ bundle exec rake install
 ```
   
 ## 初期設定
