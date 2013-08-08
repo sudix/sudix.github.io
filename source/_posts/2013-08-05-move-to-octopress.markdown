@@ -187,7 +187,7 @@ $ rake new_post["my first octopress article"]
 作成されたファイルを開くと、先頭にyamlで記述された設定があるので、  
 タイトルを変更したい場合はその中のtitleを編集します。  
 
-```yaml yyyy-mm-dd-my-first-octopress-article.markdown
+```yaml ./source/_posts/yyyy-mm-dd-my-first-octopress-article.markdown
 ---
 layout: page
 title: "Octopressでの初めての記事"
