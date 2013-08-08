@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "octopress始めました"
+title: "OctopressとGitHub Pagesでブログを始めてみた"
 date: 2013-08-05 16:42
 comments: true
 categories: miscellaneous
