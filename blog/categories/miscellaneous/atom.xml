@@ -4,7 +4,7 @@
   <title><![CDATA[Category: miscellaneous | Sudix's Blog]]></title>
   <link href="http://sudix.github.io/blog/categories/miscellaneous/atom.xml" rel="self"/>
   <link href="http://sudix.github.io/"/>
-  <updated>2013-08-08T09:53:55+09:00</updated>
+  <updated>2013-08-08T16:23:28+09:00</updated>
   <id>http://sudix.github.io/</id>
   <author>
     <name><![CDATA[sudix]]></name>
@@ -59,10 +59,6 @@ GitHub上でソースを管理することができます。<br/>
 <p>cloneするだけです。<br/>
 <code>bash Octopressのダウンロード
 $ git clone git@github.com:sudix/octopress.git
-$ cd octopress
-$ echo "1.9.3-debian" | cat &gt; .rbenv-version #rewrite for ubuntu's ruby version
-$ bundle install --path vendor/bundle
-$ bundle exec rake install
 </code></p>
 
 <h2>初期設定</h2>
@@ -224,7 +220,7 @@ $ rake new_post["my first octopress article"]
 <p>作成されたファイルを開くと、先頭にyamlで記述された設定があるので、<br/>
 タイトルを変更したい場合はその中のtitleを編集します。</p>
 
-<h2>```yaml yyyy-mm-dd-my-first-octopress-article.markdown</h2>
+<h2>```yaml ./source/_posts/yyyy-mm-dd-my-first-octopress-article.markdown</h2>
 
 <p>layout: page
 title: &ldquo;Octopressでの初めての記事&rdquo;

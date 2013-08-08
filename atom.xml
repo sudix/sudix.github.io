@@ -4,7 +4,7 @@
   <title><![CDATA[Sudix's Blog]]></title>
   <link href="http://sudix.github.io/atom.xml" rel="self"/>
   <link href="http://sudix.github.io/"/>
-  <updated>2013-08-08T09:53:55+09:00</updated>
+  <updated>2013-08-08T16:23:28+09:00</updated>
   <id>http://sudix.github.io/</id>
   <author>
     <name><![CDATA[sudix]]></name>
@@ -59,15 +59,7 @@ GitHub上でソースを管理することができます。<br/>
 <p>cloneするだけです。</p>
 
 <figure class='code'><figcaption><span>Octopressのダウンロード</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
 </pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>git clone git@github.com:sudix/octopress.git
-</span><span class='line'><span class="nv">$ </span><span class="nb">cd </span>octopress
-</span><span class='line'><span class="nv">$ </span><span class="nb">echo</span> <span class="s2">&quot;1.9.3-debian&quot;</span> | cat &gt; .rbenv-version <span class="c">#rewrite for ubuntu&#39;s ruby version</span>
-</span><span class='line'><span class="nv">$ </span>bundle install --path vendor/bundle
-</span><span class='line'><span class="nv">$ </span>bundle <span class="nb">exec </span>rake install
 </span></code></pre></td></tr></table></div></figure>
 
 
@@ -267,7 +259,7 @@ new_postの後にタイトルを入力しましょう。<br/>
 <p>作成されたファイルを開くと、先頭にyamlで記述された設定があるので、<br/>
 タイトルを変更したい場合はその中のtitleを編集します。</p>
 
-<figure class='code'><figcaption><span>yyyy-mm-dd-my-first-octopress-article.markdown</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><figcaption><span>./source/_posts/yyyy-mm-dd-my-first-octopress-article.markdown</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
