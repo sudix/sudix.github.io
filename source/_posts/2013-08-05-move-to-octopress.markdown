@@ -204,7 +204,7 @@ footer: true
 ## おまけ コードスニペットの書き方
 gist使ったり色々と書き方はあるみたいです。  
 参考:[http://octopress.org/docs/blogging/code/](http://octopress.org/docs/blogging/code/)  
-バッククォートで囲み、言語も指定可能です。
+基本はバッククォートで囲みます。言語も指定可能です。
 
     ```ruby Test.rb
     def hoge
@@ -223,7 +223,7 @@ end
 Scalaだって  
     ```scala Hoge.scala
     object Hoge {
-      def main(string: Args) {
+      def main(args: Array[String]) {
         println("hoge")
       }
     }
@@ -231,7 +231,7 @@ Scalaだって
 ↓  
 ```scala Hoge.scala
 object Hoge {
-  def main(string: Args) {
+  def main(args: Array[String]) {
     println("hoge")
   }
 }
