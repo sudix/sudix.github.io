@@ -4,7 +4,7 @@
   <title><![CDATA[Sudix's Blog]]></title>
   <link href="http://sudix.github.io/atom.xml" rel="self"/>
   <link href="http://sudix.github.io/"/>
-  <updated>2013-08-07T17:07:55+09:00</updated>
+  <updated>2013-08-08T09:53:55+09:00</updated>
   <id>http://sudix.github.io/</id>
   <author>
     <name><![CDATA[sudix]]></name>
@@ -14,7 +14,7 @@
 
   
   <entry>
-    <title type="html"><![CDATA[octopress始めました]]></title>
+    <title type="html"><![CDATA[OctopressとGitHub Pagesでブログを始めてみた]]></title>
     <link href="http://sudix.github.io/blog/2013/08/05/move-to-octopress/"/>
     <updated>2013-08-05T16:42:00+09:00</updated>
     <id>http://sudix.github.io/blog/2013/08/05/move-to-octopress</id>
@@ -294,7 +294,7 @@ new_postの後にタイトルを入力しましょう。<br/>
 
 <p>gist使ったり色々と書き方はあるみたいです。<br/>
 参考:<a href="http://octopress.org/docs/blogging/code/">http://octopress.org/docs/blogging/code/</a><br/>
-バッククォートで囲み、言語も指定可能です。</p>
+基本はバッククォートで囲みます。言語も指定可能です。</p>
 
 <pre><code>```ruby Test.rb
 def hoge
@@ -321,7 +321,7 @@ end
 
 <pre><code>```scala Hoge.scala
 object Hoge {
-  def main(string: Args) {
+  def main(args: Array[String]) {
     println("hoge")
   }
 }
@@ -336,7 +336,7 @@ object Hoge {
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
 </pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="k">object</span> <span class="nc">Hoge</span> <span class="o">{</span>
-</span><span class='line'>  <span class="k">def</span> <span class="n">main</span><span class="o">(</span><span class="n">string</span><span class="k">:</span> <span class="kt">Args</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>  <span class="k">def</span> <span class="n">main</span><span class="o">(</span><span class="n">args</span><span class="k">:</span> <span class="kt">Array</span><span class="o">[</span><span class="kt">String</span><span class="o">])</span> <span class="o">{</span>
 </span><span class='line'>    <span class="n">println</span><span class="o">(</span><span class="s">&quot;hoge&quot;</span><span class="o">)</span>
 </span><span class='line'>  <span class="o">}</span>
 </span><span class='line'><span class="o">}</span>
