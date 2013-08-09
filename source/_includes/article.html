@@ -13,7 +13,13 @@
                 {% if excerpted == 'true' %}<a href="{{ root_url }}{{ post.url }}" class="more-link">{{ site.excerpt_link }}</a>{% endif %}
         </div>
 {% else %}
-        <h1 class="title" itemprop="name">{% if site.titlecase %}{{ page.title | titlecase }}{% else %}{{ page.title }}{% endif %}</h1>
+        <h1 class="title" itemprop="name">{% if site.titlecase %}{{ page.title | titlecase }}{% else %}{{ page.title }}{% endif %}
+          <a href="http://b.hatena.ne.jp/entry/{{ site.url }}{{ page.url }}">
+            <img src="http://b.hatena.ne.jp/entry/image/{{ site.url }}{{ page.url }}"
+                 alt="はてなブックマーク - {{ page.title }}"
+                 title="はてなブックマーク - {{ site.url }}{{ page.url }}" />
+          </a>
+        </h1>
         {% unless page.sharing == false %}
             {% include post/sharing.html %}
         {% endunless %}
