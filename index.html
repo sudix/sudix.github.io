@@ -7,9 +7,10 @@
 	<meta name="author" content="sudix">
 
 	
-	<meta name="description" content="2013/08/05 miscellaneous OctopressとGitHub Pagesでブログを始めてみた これまではてなダイアリーを使ってきましたが、
-octopressを知って面白そうだったので導入してみました。
-「A blogging framework for hackers &hellip;">
+	<meta name="description" content="2013/08/20 scala Scalaでエラトステネスの篩を実装してみる こちらのエントリ
+もしぼくが採用するなら
+を読んで、エラトステネスの篩は知ってはいるものの実装してみたことないなぁと思い、
+Scalaで実装してみました。 Wikipediaの例題を参考に作ってみます。 &hellip;">
 	
 
   <!-- http://t.co/dKP3o1e -->
@@ -89,6 +90,169 @@ octopressを知って面白そうだったので導入してみました。
 			<div class="mid-col-container">
 				<div id="content" class="inner">
 <div itemscope itemtype="http://schema.org/Blog">
+
+
+    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+        <div class="meta">
+                <div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-08-20T12:26:00+09:00" data-updated="true" itemprop="datePublished">2013/08/20</time></div>
+                <div class="tags">
+
+
+	<a class='category' href='/blog/categories/scala/'>scala</a>
+
+
+</div>
+                
+        </div>
+        <h1 class="title" itemprop="name"><a href="/blog/2013/08/20/sieve-of-eratosthenes-with-scala/" itemprop="url">Scalaでエラトステネスの篩を実装してみる</a></h1>
+        <div class="entry-content" itemprop="articleBody">
+                <p>こちらのエントリ
+<a href="http://udzura.hatenablog.jp/entry/2013/08/17/021446">もしぼくが採用するなら</a>
+を読んで、エラトステネスの篩は知ってはいるものの実装してみたことないなぁと思い、
+Scalaで実装してみました。</p>
+
+<p><a href="http://ja.wikipedia.org/wiki/%E3%82%A8%E3%83%A9%E3%83%88%E3%82%B9%E3%83%86%E3%83%8D%E3%82%B9%E3%81%AE%E7%AF%A9">Wikipedia</a>の例題を参考に作ってみます。
+考え方としては自然数の集合に対して、小さい順からその倍数を削除していって、
+残ったものが素数、という考えです。</p>
+
+<p>最初、こんな感じで実装してみました。</p>
+
+<figure class='code'><figcaption><span>末尾再帰じゃないバージョン</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="k">def</span> <span class="n">sieveOfEratosthenes</span><span class="o">(</span><span class="n">numbers</span><span class="k">:</span> <span class="kt">List</span><span class="o">[</span><span class="kt">Int</span><span class="o">])</span><span class="k">:</span> <span class="kt">List</span><span class="o">[</span><span class="kt">Int</span><span class="o">]</span> <span class="k">=</span> <span class="o">{</span>
+</span><span class='line'>  <span class="n">numbers</span> <span class="k">match</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">case</span> <span class="nc">Nil</span> <span class="k">=&gt;</span>
+</span><span class='line'>      <span class="nc">Nil</span>
+</span><span class='line'>    <span class="k">case</span> <span class="mi">1</span> <span class="o">::</span> <span class="n">tail</span> <span class="k">=&gt;</span>
+</span><span class='line'>      <span class="n">sieveOfEratosthenes</span><span class="o">(</span><span class="n">tail</span><span class="o">)</span>
+</span><span class='line'>    <span class="k">case</span> <span class="n">head</span> <span class="o">::</span> <span class="n">tail</span> <span class="k">=&gt;</span>
+</span><span class='line'>      <span class="n">head</span> <span class="o">::</span> <span class="n">sieveOfEratosthenes</span><span class="o">(</span><span class="n">tail</span><span class="o">.</span><span class="n">filterNot</span><span class="o">(</span><span class="k">_</span> <span class="o">%</span> <span class="n">head</span> <span class="o">==</span> <span class="mi">0</span><span class="o">))</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 実行</span>
+</span><span class='line'><span class="n">println</span><span class="o">(</span><span class="n">sieveOfEratosthenes</span><span class="o">(</span><span class="nc">Range</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span> <span class="mi">121</span><span class="o">).</span><span class="n">toList</span><span class="o">))</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>まあこれで動くには動くのですが、最後で再帰の結果に対して演算しているので末尾再帰されてません（@tailrecつけるとコンパイルエラーになる）。
+なので数が多くなるとOutOfMemoryで落ちます。</p>
+
+<p>いろいろ考えて、素数の結果リストを引数で渡すようにしました。</p>
+
+<figure class='code'><figcaption><span>末尾再帰バージョン</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="k">import</span> <span class="nn">scala.annotation.tailrec</span>
+</span><span class='line'>
+</span><span class='line'><span class="nd">@tailrec</span>
+</span><span class='line'><span class="k">def</span> <span class="n">sieveOfEratosthenes</span><span class="o">(</span><span class="n">numbers</span><span class="k">:</span> <span class="kt">List</span><span class="o">[</span><span class="kt">Int</span><span class="o">],</span> <span class="n">primes</span><span class="k">:</span> <span class="kt">List</span><span class="o">[</span><span class="kt">Int</span><span class="o">])</span><span class="k">:</span> <span class="o">(</span><span class="kt">List</span><span class="o">[</span><span class="kt">Int</span><span class="o">],</span> <span class="nc">List</span><span class="o">[</span><span class="kt">Int</span><span class="o">])</span> <span class="k">=</span> <span class="o">{</span>
+</span><span class='line'>  <span class="n">numbers</span> <span class="k">match</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">case</span> <span class="nc">Nil</span> <span class="k">=&gt;</span>
+</span><span class='line'>      <span class="o">(</span><span class="n">numbers</span><span class="o">,</span> <span class="n">primes</span><span class="o">.</span><span class="n">reverse</span><span class="o">)</span>
+</span><span class='line'>    <span class="k">case</span> <span class="mi">1</span> <span class="o">::</span> <span class="n">tail</span> <span class="k">=&gt;</span>
+</span><span class='line'>      <span class="n">sieveOfEratosthenes</span><span class="o">(</span><span class="n">tail</span><span class="o">,</span> <span class="n">primes</span><span class="o">)</span>
+</span><span class='line'>    <span class="k">case</span> <span class="n">head</span> <span class="o">::</span> <span class="n">tail</span> <span class="k">=&gt;</span>
+</span><span class='line'>      <span class="n">sieveOfEratosthenes</span><span class="o">(</span><span class="n">tail</span><span class="o">.</span><span class="n">filterNot</span><span class="o">(</span><span class="k">_</span> <span class="o">%</span> <span class="n">head</span> <span class="o">==</span> <span class="mi">0</span><span class="o">),</span> <span class="n">head</span> <span class="o">::</span> <span class="n">primes</span><span class="o">)</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 実行</span>
+</span><span class='line'><span class="n">sieveOfEratosthenes</span><span class="o">(</span><span class="nc">Range</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span> <span class="mi">120</span><span class="o">).</span><span class="n">toList</span><span class="o">,</span> <span class="nc">Nil</span><span class="o">).</span><span class="n">_2</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>末尾再帰になった！しかし実行時に引数にNilを渡したり、結果がタプルなので結果取得にひと手間かかったり、かっこ悪すぎ。<br/>
+なので隠蔽を図った結果がこれ。</p>
+
+<figure class='code'><figcaption><span>末尾再帰バージョン（呼び出しをシンプルに）</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="k">import</span> <span class="nn">scala.annotation.tailrec</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">def</span> <span class="n">sieveOfEratosthenes</span><span class="o">(</span><span class="n">numbers</span><span class="k">:</span> <span class="kt">List</span><span class="o">[</span><span class="kt">Int</span><span class="o">])</span><span class="k">:</span> <span class="kt">List</span><span class="o">[</span><span class="kt">Int</span><span class="o">]</span> <span class="k">=</span> <span class="o">{</span>
+</span><span class='line'>  <span class="nd">@tailrec</span>
+</span><span class='line'>  <span class="k">def</span> <span class="n">sieve</span><span class="o">(</span><span class="n">numbers</span><span class="k">:</span> <span class="kt">List</span><span class="o">[</span><span class="kt">Int</span><span class="o">],</span> <span class="n">primes</span><span class="k">:</span> <span class="kt">List</span><span class="o">[</span><span class="kt">Int</span><span class="o">])</span><span class="k">:</span> <span class="o">(</span><span class="kt">List</span><span class="o">[</span><span class="kt">Int</span><span class="o">],</span> <span class="nc">List</span><span class="o">[</span><span class="kt">Int</span><span class="o">])</span> <span class="k">=</span> <span class="o">{</span>
+</span><span class='line'>    <span class="n">numbers</span> <span class="k">match</span> <span class="o">{</span>
+</span><span class='line'>      <span class="k">case</span> <span class="nc">Nil</span> <span class="k">=&gt;</span>
+</span><span class='line'>        <span class="o">(</span><span class="n">numbers</span><span class="o">,</span> <span class="n">primes</span><span class="o">.</span><span class="n">reverse</span><span class="o">)</span>
+</span><span class='line'>      <span class="k">case</span> <span class="mi">1</span> <span class="o">::</span> <span class="n">tail</span> <span class="k">=&gt;</span>
+</span><span class='line'>        <span class="n">sieve</span><span class="o">(</span><span class="n">tail</span><span class="o">,</span> <span class="n">primes</span><span class="o">)</span>
+</span><span class='line'>      <span class="k">case</span> <span class="n">head</span> <span class="o">::</span> <span class="n">tail</span> <span class="k">=&gt;</span>
+</span><span class='line'>        <span class="n">sieve</span><span class="o">(</span><span class="n">tail</span><span class="o">.</span><span class="n">filterNot</span><span class="o">(</span><span class="k">_</span> <span class="o">%</span> <span class="n">head</span> <span class="o">==</span> <span class="mi">0</span><span class="o">),</span> <span class="n">head</span> <span class="o">::</span> <span class="n">primes</span><span class="o">)</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'>  <span class="n">sieve</span><span class="o">(</span><span class="n">numbers</span><span class="o">,</span> <span class="nc">Nil</span><span class="o">).</span><span class="n">_2</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 実行</span>
+</span><span class='line'><span class="n">println</span><span class="o">(</span><span class="n">sieveOfEratosthenes</span><span class="o">(</span><span class="nc">Range</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span> <span class="mi">121</span><span class="o">).</span><span class="n">toList</span><span class="o">))</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>できたけどなんかゴチャゴチャしてる感じがありますね・・・。きっともっと素敵な書き方があるはず。<br/>
+ということでググってみると、<br/>
+<a href="http://mogproject.blogspot.jp/2013/05/sieve-of-eratosthenes-in-scala.html">Sieve of Eratosthenes in Scala</a><br/>
+こちらの記事を発見。おお、Stream使うとこんなにもスッキリ書けるんですね。確かに衝撃的。<br/>
+まだまだScala力が足りません。</p>
+
+                
+                
+        </div>
+
+</article>
 
 
     <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
