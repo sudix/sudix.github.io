@@ -4,7 +4,7 @@
   <title><![CDATA[Sudix's Blog]]></title>
   <link href="http://sudix.github.io/atom.xml" rel="self"/>
   <link href="http://sudix.github.io/"/>
-  <updated>2013-08-21T15:42:15+09:00</updated>
+  <updated>2013-08-23T11:23:38+09:00</updated>
   <id>http://sudix.github.io/</id>
   <author>
     <name><![CDATA[sudix]]></name>
@@ -12,6 +12,149 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[[coffeescript] 標準偏差を使って異常っぽい値を検知してみる]]></title>
+    <link href="http://sudix.github.io/blog/2013/08/23/error-detect-with-standard-deviation/"/>
+    <updated>2013-08-23T11:02:00+09:00</updated>
+    <id>http://sudix.github.io/blog/2013/08/23/error-detect-with-standard-deviation</id>
+    <content type="html"><![CDATA[<p>日々変わる数字があって、たまに異常に減ったり増えたりする場合があり、
+それが起きたときにすぐわかるようにしたい。
+という要望があったので、標準偏差を使ってエラーっぽい値が分かるようにしてみました。
+ブラウザ上で実行する必要があったのでcoffeescriptです。</p>
+
+<h2>コード</h2>
+
+<p>checkRangeListメソッドにデータを与えると、下限以下なら-1、上限以上なら1を返します。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+</pre></td><td class='code'><pre><code class='coffeescript'><span class='line'><span class="c1">######################</span>
+</span><span class='line'><span class="c1"># 異常値計算用クラス</span>
+</span><span class='line'><span class="c1">######################</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nx">ErrorDataDetector</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nv">self = </span><span class="kc">undefined</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># 平均からどれぐらい離れたら異常とみなすかの定数。</span>
+</span><span class='line'>  <span class="c1"># ±（この値×標準偏差）から外れていれば異常とします。</span>
+</span><span class='line'>  <span class="c1"># 2であればおよそ95%範囲の外の値になります。</span>
+</span><span class='line'>  <span class="nv">normalRange = </span><span class="mi">2</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nv">constructor: </span><span class="nf">-&gt;</span> <span class="nv">self = </span><span class="k">this</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">#平均を求める</span>
+</span><span class='line'>  <span class="nv">average: </span><span class="nf">(data) -&gt;</span>
+</span><span class='line'>    <span class="nx">data</span><span class="p">.</span><span class="nx">reduce</span><span class="p">(</span><span class="nf">(acc, n) -&gt;</span> <span class="nx">acc</span> <span class="o">+</span> <span class="nx">n</span><span class="p">)</span> <span class="o">/</span> <span class="nx">data</span><span class="p">.</span><span class="nx">length</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">#分散を求める</span>
+</span><span class='line'>  <span class="c1">#((データ－平均値)の２乗)の総和÷ 個数</span>
+</span><span class='line'>  <span class="nv">variance: </span><span class="nf">(data, avg) -&gt;</span>
+</span><span class='line'>    <span class="nx">data</span><span class="p">.</span><span class="nx">reduce</span><span class="p">(</span><span class="nf">(acc, n) -&gt;</span> <span class="nx">acc</span> <span class="o">+</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">pow</span><span class="p">(</span><span class="nx">n</span> <span class="o">-</span> <span class="nx">avg</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span> <span class="o">/</span> <span class="nx">data</span><span class="p">.</span><span class="nx">length</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">#標準偏差を求める</span>
+</span><span class='line'>  <span class="c1">#分散の平方根</span>
+</span><span class='line'>  <span class="nv">standardDeviation: </span><span class="nf">(data, avg) -&gt;</span>
+</span><span class='line'>    <span class="nb">Math</span><span class="p">.</span><span class="nx">sqrt</span><span class="p">(</span><span class="nx">self</span><span class="p">.</span><span class="nx">variance</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">avg</span><span class="p">))</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">#外れ値かどうかを調べ、リストに結果を詰めて返す</span>
+</span><span class='line'>  <span class="c1">#-1:範囲外(下) 0:正常 1:範囲外(上)</span>
+</span><span class='line'>  <span class="nv">checkRangeList: </span><span class="nf">(data) -&gt;</span>
+</span><span class='line'>    <span class="nv">avg = </span><span class="nx">self</span><span class="p">.</span><span class="nx">average</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span>
+</span><span class='line'>    <span class="nv">sd = </span><span class="nx">self</span><span class="p">.</span><span class="nx">standardDeviation</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">avg</span><span class="p">)</span>
+</span><span class='line'>    <span class="nv">lb = </span><span class="nx">self</span><span class="p">.</span><span class="nx">lowerBound</span><span class="p">(</span><span class="nx">avg</span><span class="p">,</span> <span class="nx">sd</span><span class="p">)</span>
+</span><span class='line'>    <span class="nv">ub = </span><span class="nx">self</span><span class="p">.</span><span class="nx">upperBound</span><span class="p">(</span><span class="nx">avg</span><span class="p">,</span> <span class="nx">sd</span><span class="p">)</span>
+</span><span class='line'>    <span class="nx">data</span><span class="p">.</span><span class="nx">map</span> <span class="nf">(n) -&gt;</span> <span class="nx">self</span><span class="p">.</span><span class="nx">checkRange</span><span class="p">(</span><span class="nx">n</span><span class="p">,</span> <span class="nx">avg</span><span class="p">,</span> <span class="nx">lb</span><span class="p">,</span> <span class="nx">ub</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># 下限境界</span>
+</span><span class='line'>  <span class="nv">lowerBound: </span><span class="nf">(avg, sd) -&gt;</span> <span class="nx">avg</span> <span class="o">-</span> <span class="p">(</span><span class="nx">sd</span> <span class="o">*</span> <span class="nx">normalRange</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1"># 上限境界</span>
+</span><span class='line'>  <span class="nv">upperBound: </span><span class="nf">(avg, sd) -&gt;</span> <span class="nx">avg</span> <span class="o">+</span> <span class="p">(</span><span class="nx">sd</span> <span class="o">*</span> <span class="nx">normalRange</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nv">checkRange: </span><span class="nf">(n, avg, lb, ub) -&gt;</span>
+</span><span class='line'>    <span class="k">if</span> <span class="nx">avg</span> <span class="o">==</span> <span class="mi">0</span>
+</span><span class='line'>      <span class="mi">0</span>
+</span><span class='line'>    <span class="k">else</span> <span class="k">if</span> <span class="nx">n</span> <span class="o">&lt;=</span> <span class="nx">lb</span>
+</span><span class='line'>      <span class="o">-</span><span class="mi">1</span>
+</span><span class='line'>    <span class="k">else</span> <span class="k">if</span> <span class="nx">n</span> <span class="o">&gt;=</span> <span class="nx">ub</span>
+</span><span class='line'>      <span class="mi">1</span>
+</span><span class='line'>    <span class="k">else</span>
+</span><span class='line'>      <span class="mi">0</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>実行結果</h2>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='coffeescript'><span class='line'><span class="nv">l = </span><span class="p">[</span><span class="mi">826</span><span class="p">,</span><span class="mi">751</span><span class="p">,</span><span class="mi">833</span><span class="p">,</span><span class="mi">905</span><span class="p">,</span><span class="mi">888</span><span class="p">,</span><span class="mi">950</span><span class="p">,</span><span class="mi">880</span><span class="p">,</span><span class="mi">868</span><span class="p">,</span><span class="mi">935</span><span class="p">,</span><span class="mi">1293</span><span class="p">,</span><span class="mi">1315</span><span class="p">,</span><span class="mi">1555</span><span class="p">,</span><span class="mi">1445</span><span class="p">,</span><span class="mi">1732</span><span class="p">,</span><span class="mi">1351</span><span class="p">,</span><span class="mi">1157</span><span class="p">,</span><span class="mi">1268</span><span class="p">,</span><span class="mi">1201</span><span class="p">,</span><span class="mi">733</span><span class="p">,</span><span class="mi">2000</span><span class="p">,</span><span class="mi">100</span><span class="p">]</span>
+</span><span class='line'><span class="nv">d = </span><span class="k">new</span> <span class="nx">ErrorDataDetector</span><span class="p">()</span>
+</span><span class='line'><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">d</span><span class="p">.</span><span class="nx">checkRangeList</span><span class="p">(</span><span class="nx">l</span><span class="p">))</span>
+</span><span class='line'> <span class="c1"># 結果 =&gt;　[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, -1]</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>オチ</h2>
+
+<p>さっそく実装して試したところ異常っぽい値を検知できたので意気揚々と担当者に見せたところ、
+よくわかんないからもっと簡単なロジックにしてと言われましたとさ・・・。</p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Scalaでエラトステネスの篩を実装してみる]]></title>
