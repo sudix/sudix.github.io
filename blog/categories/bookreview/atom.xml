@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: bookreview | Sudix's Blog]]></title>
+  <link href="http://sudix.github.io/blog/categories/bookreview/atom.xml" rel="self"/>
+  <link href="http://sudix.github.io/"/>
+  <updated>2013-09-13T16:51:01+09:00</updated>
+  <id>http://sudix.github.io/</id>
+  <author>
+    <name><![CDATA[sudix]]></name>
+    <email><![CDATA[sudix7755@gmail.com]]></email>
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[[書評] JavaScript The Definitive Guide 6th]]></title>
+    <link href="http://sudix.github.io/blog/2013/09/13/javascript-the-definitive-guide-6th/"/>
+    <updated>2013-09-13T16:37:00+09:00</updated>
+    <id>http://sudix.github.io/blog/2013/09/13/javascript-the-definitive-guide-6th</id>
+    <content type="html"><![CDATA[<p><a href="http://shop.oreilly.com/product/9780596805531.do">http://shop.oreilly.com/product/9780596805531.do</a></p>
+
+<p>あまりWEBのフロント側の開発を行ったことが無くてこれまでJavaScriptは避けていました。
+prototypeとか見る度に変な言語だなぁと感じて、好きではなかったのもあります。
+しかしついに使う場面がきそうなので、真面目に勉強することに。
+JavaScriptの本と言えばサイ本と聞いたことがあったので、英語の勉強がてら原書を電子版を購入してみました。
+気軽に読み始めたものの、700ページもあって読み終えるのに随分時間がかかりましたが、
+想像以上の面白さでした。</p>
+
+<p>最初は言語仕様についてひたすら書かれていますが、関数型言語としての側面も紹介されたりして、
+Scalaを触っていた事もあり引きこまれました。
+わけが分からないと思っていたprototypeも分かりやすく説明されています。
+驚いたのが正規表現についてもやたら丁寧に説明されていること。
+今まで読んできた正規表現関係の資料の中で一番良かったかも。</p>
+
+<p>後半ではDOM操作やjquery、node.jsの紹介まであり、
+さらに最後にはHTML5関連（local storageやWebSocket）にも触れられており、
+満足感いっぱいです。</p>
+
+<p>実は英語の本を最後まで読み通したのはこれが初めてだったりしますが、
+使われている表現も平易で読みやすく、長文を読むのにも随分慣れた気がします。
+その点でもおすすめ。</p>
+
+<h3>結論</h3>
+
+<p>評価：<strong><em>★★★★★</em></strong><br/>
+JavaScriptを一からきっちり勉強したい方にとってもおすすめ。<br/>
+ただプログラムの経験が無い人がこれで勉強するには難しいかも。</p>
+]]></content>
+  </entry>
+  
+</feed>
