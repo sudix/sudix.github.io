@@ -4,7 +4,7 @@
   <title><![CDATA[Sudix's Blog]]></title>
   <link href="http://sudix.github.io/atom.xml" rel="self"/>
   <link href="http://sudix.github.io/"/>
-  <updated>2013-10-18T15:52:22+09:00</updated>
+  <updated>2013-10-18T15:56:15+09:00</updated>
   <id>http://sudix.github.io/</id>
   <author>
     <name><![CDATA[sudix]]></name>
@@ -321,7 +321,7 @@ BatchAのmainは、RUBY_VERSIONをputsするだけのメソッドです。</p>
 </pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span><span class="nb">cd</span>
 </span><span class='line'><span class="nv">$ </span>/home/sudix/batches/batch_18/exec_batch_a.sh
 </span><span class='line'>1.8.7
-</span><span class='line'><span class="nv">$ </span>/home/sudix/batches/batch_18/exec_batch_a.sh
+</span><span class='line'><span class="nv">$ </span>/home/sudix/batches/batch_19/exec_batch_a.sh
 </span><span class='line'>1.9.3
 </span></code></pre></td></tr></table></div></figure>
 
