@@ -7,10 +7,7 @@
 	<meta name="author" content="sudix">
 
 	
-	<meta name="description" content="2013/10/18 CentOSでrbenvを使ってバッチのRubyバージョンを切り替える Motivation Ruby1.8.7で作った大量のバッチがある。
-それを1.9（さらには2.0）に移行していきたいんだけど、
-一気に移行するまで待ってると時間がかかるので、
-少しずつ移行したい。また &hellip;">
+	<meta name="description" content="2013/10/23 ruby [Ruby] Rubyで関数合成できるLambdaDriverがかっこよすぎる Rubyで関数合成できると便利なのになぁという場面に出くわして、以前に見て知っていたけど試したことはなかったLambdaDriverを触ってみた。 ( ꒪⌓꒪) ゆるよろ日記 & &hellip;">
 	
 
   <!-- http://t.co/dKP3o1e -->
@@ -90,6 +87,84 @@
 			<div class="mid-col-container">
 				<div id="content" class="inner">
 <div itemscope itemtype="http://schema.org/Blog">
+
+
+    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+        <div class="meta">
+                <div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2013-10-23T15:30:00+09:00" data-updated="true" itemprop="datePublished">2013/10/23</time></div>
+                <div class="tags">
+
+
+	<a class='category' href='/blog/categories/ruby/'>ruby</a>
+
+
+</div>
+                
+        </div>
+        <h1 class="title" itemprop="name"><a href="/blog/2013/10/23/ruby-lambda-driver/" itemprop="url">[Ruby] Rubyで関数合成できるLambdaDriverがかっこよすぎる</a></h1>
+        <div class="entry-content" itemprop="articleBody">
+                <p>Rubyで関数合成できると便利なのになぁという場面に出くわして、以前に見て知っていたけど試したことはなかったLambdaDriverを触ってみた。</p>
+
+<p><a href="http://yuroyoro.hatenablog.com/entry/2013/03/27/190640">( ꒪⌓꒪) ゆるよろ日記 &ndash; Rubyで関数合成とかしたいので lambda_driver.gem というのを作った</a></p>
+
+<h3>install</h3>
+
+<p>gem install lambda_driver</p>
+
+<h3>サンプル</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='ruby'><span class='line'><span class="nb">require</span> <span class="s1">&#39;lambda_driver&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">add_hoge</span> <span class="o">=</span> <span class="nb">lambda</span><span class="p">{</span><span class="o">|</span><span class="n">x</span><span class="o">|</span> <span class="n">x</span> <span class="o">+</span> <span class="s2">&quot;hoge&quot;</span><span class="p">}</span>
+</span><span class='line'><span class="n">add_fuga</span> <span class="o">=</span> <span class="nb">lambda</span><span class="p">{</span><span class="o">|</span><span class="n">x</span><span class="o">|</span> <span class="n">x</span> <span class="o">+</span> <span class="s2">&quot;fuga&quot;</span><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># &gt;&gt;で合成</span>
+</span><span class='line'><span class="n">add_hoge_fuga</span> <span class="o">=</span> <span class="n">add_hoge</span> <span class="o">&gt;&gt;</span> <span class="n">add_fuga</span>
+</span><span class='line'><span class="c1"># &lt; で実行（callの別名)</span>
+</span><span class='line'><span class="n">add_hoge_fuga</span> <span class="o">&lt;</span> <span class="s2">&quot;piyo&quot;</span>
+</span><span class='line'><span class="o">=&gt;</span> <span class="s2">&quot;piyohogefuga&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1"># &lt;&lt;で逆順で合成</span>
+</span><span class='line'><span class="n">add_fuga_hoge</span> <span class="o">=</span> <span class="n">add_hoge</span> <span class="o">&lt;&lt;</span> <span class="n">add_fuga</span>
+</span><span class='line'><span class="n">add_fuga_hoge</span> <span class="o">&lt;</span> <span class="s2">&quot;piyo&quot;</span>
+</span><span class='line'><span class="o">=&gt;</span> <span class="s2">&quot;piyofugahoge&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>かっこよすぎるやろ！でも仕事のコードで使ったら顰蹙物だろうなぁ。</p>
+
+                
+                
+        </div>
+
+</article>
 
 
     <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">

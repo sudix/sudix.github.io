@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: ruby | Sudix's Blog]]></title>
+  <link href="http://sudix.github.io/blog/categories/ruby/atom.xml" rel="self"/>
+  <link href="http://sudix.github.io/"/>
+  <updated>2013-10-23T15:39:28+09:00</updated>
+  <id>http://sudix.github.io/</id>
+  <author>
+    <name><![CDATA[sudix]]></name>
+    <email><![CDATA[sudix7755@gmail.com]]></email>
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[[ruby] Rubyで関数合成できるLambdaDriverがかっこよすぎる]]></title>
+    <link href="http://sudix.github.io/blog/2013/10/23/ruby-lambda-driver/"/>
+    <updated>2013-10-23T15:30:00+09:00</updated>
+    <id>http://sudix.github.io/blog/2013/10/23/ruby-lambda-driver</id>
+    <content type="html"><![CDATA[<p>Rubyで関数合成できると便利なのになぁという場面に出くわして、以前に見て知っていたけど試したことはなかったLambdaDriverを触ってみた。</p>
+
+<p><a href="http://yuroyoro.hatenablog.com/entry/2013/03/27/190640">( ꒪⌓꒪) ゆるよろ日記 &ndash; Rubyで関数合成とかしたいので lambda_driver.gem というのを作った</a></p>
+
+<h3>install</h3>
+
+<p>gem install lambda_driver</p>
+
+<h3>サンプル</h3>
+
+<p>```ruby
+require &lsquo;lambda_driver&rsquo;</p>
+
+<p>add_hoge = lambda{|x| x + &ldquo;hoge&rdquo;}
+add_fuga = lambda{|x| x + &ldquo;fuga&rdquo;}</p>
+
+<h1>>>で合成</h1>
+
+<p>add_hoge_fuga = add_hoge >> add_fuga</p>
+
+<h1>&lt; で実行（callの別名)</h1>
+
+<p>add_hoge_fuga &lt; &ldquo;piyo&rdquo;
+=> &ldquo;piyohogefuga&rdquo;</p>
+
+<h1>&lt;&lt;で逆順で合成</h1>
+
+<p>add_fuga_hoge = add_hoge &lt;&lt; add_fuga
+add_fuga_hoge &lt; &ldquo;piyo&rdquo;
+=> &ldquo;piyofugahoge&rdquo;
+```</p>
+
+<p>かっこよすぎるやろ！でも仕事のコードで使ったら顰蹙物だろうなぁ。</p>
+]]></content>
+  </entry>
+  
+</feed>
