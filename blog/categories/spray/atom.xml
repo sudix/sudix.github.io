@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Category: scala | Sudix's Blog]]></title>
-  <link href="http://sudix.github.io/blog/categories/scala/atom.xml" rel="self"/>
+  <title><![CDATA[Category: spray | Sudix's Blog]]></title>
+  <link href="http://sudix.github.io/blog/categories/spray/atom.xml" rel="self"/>
   <link href="http://sudix.github.io/"/>
   <updated>2014-03-12T16:58:36+09:00</updated>
   <id>http://sudix.github.io/</id>
@@ -974,103 +974,6 @@ Mems_allowed_list:  0
 voluntary_ctxt_switches:    5
 nonvoluntary_ctxt_switches: 2
 </code></p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Scalaでエラトステネスの篩を実装してみる]]></title>
-    <link href="http://sudix.github.io/blog/2013/08/20/sieve-of-eratosthenes-with-scala/"/>
-    <updated>2013-08-20T12:26:00+09:00</updated>
-    <id>http://sudix.github.io/blog/2013/08/20/sieve-of-eratosthenes-with-scala</id>
-    <content type="html"><![CDATA[<p>こちらのエントリ
-<a href="http://udzura.hatenablog.jp/entry/2013/08/17/021446">もしぼくが採用するなら</a>
-を読んで、エラトステネスの篩は知ってはいるものの実装してみたことないなぁと思い、
-Scalaで実装してみました。</p>
-
-<p><a href="http://ja.wikipedia.org/wiki/%E3%82%A8%E3%83%A9%E3%83%88%E3%82%B9%E3%83%86%E3%83%8D%E3%82%B9%E3%81%AE%E7%AF%A9">Wikipedia</a>の例題を参考に作ってみます。
-考え方としては自然数の集合に対して、小さい順からその倍数を削除していって、
-残ったものが素数、という考えです。</p>
-
-<p>最初、こんな感じで実装してみました。
-```scala 末尾再帰じゃないバージョン
-def sieveOfEratosthenes(numbers: List[Int]): List[Int] = {
-  numbers match {</p>
-
-<pre><code>case Nil =&gt;
-  Nil
-case 1 :: tail =&gt;
-  sieveOfEratosthenes(tail)
-case head :: tail =&gt;
-  head :: sieveOfEratosthenes(tail.filterNot(_ % head == 0))
-</code></pre>
-
-<p>  }
-}</p>
-
-<p>// 実行
-println(sieveOfEratosthenes(Range(1, 121).toList))
-```</p>
-
-<p>まあこれで動くには動くのですが、最後で再帰の結果に対して演算しているので末尾再帰されてません（@tailrecつけるとコンパイルエラーになる）。
-なので数が多くなるとOutOfMemoryで落ちます。</p>
-
-<p>いろいろ考えて、素数の結果リストを引数で渡すようにしました。</p>
-
-<p>```scala 末尾再帰バージョン
-import scala.annotation.tailrec</p>
-
-<p>@tailrec
-def sieveOfEratosthenes(numbers: List[Int], primes: List[Int]): (List[Int], List[Int]) = {
-  numbers match {</p>
-
-<pre><code>case Nil =&gt;
-  (numbers, primes.reverse)
-case 1 :: tail =&gt;
-  sieveOfEratosthenes(tail, primes)
-case head :: tail =&gt;
-  sieveOfEratosthenes(tail.filterNot(_ % head == 0), head :: primes)
-</code></pre>
-
-<p>  }
-}</p>
-
-<p>// 実行
-sieveOfEratosthenes(Range(1, 120).toList, Nil)._2
-```</p>
-
-<p>末尾再帰になった！しかし実行時に引数にNilを渡したり、結果がタプルなので結果取得にひと手間かかったり、かっこ悪すぎ。<br/>
-なので隠蔽を図った結果がこれ。</p>
-
-<p>```scala 末尾再帰バージョン（呼び出しをシンプルに）
-import scala.annotation.tailrec</p>
-
-<p>def sieveOfEratosthenes(numbers: List[Int]): List[Int] = {
-  @tailrec
-  def sieve(numbers: List[Int], primes: List[Int]): (List[Int], List[Int]) = {</p>
-
-<pre><code>numbers match {
-  case Nil =&gt;
-    (numbers, primes.reverse)
-  case 1 :: tail =&gt;
-    sieve(tail, primes)
-  case head :: tail =&gt;
-    sieve(tail.filterNot(_ % head == 0), head :: primes)
-}
-</code></pre>
-
-<p>  }
-  sieve(numbers, Nil)._2
-}</p>
-
-<p>// 実行
-println(sieveOfEratosthenes(Range(1, 121).toList))
-```</p>
-
-<p>できたけどなんかゴチャゴチャしてる感じがありますね・・・。きっともっと素敵な書き方があるはず。<br/>
-ということでググってみると、<br/>
-<a href="http://mogproject.blogspot.jp/2013/05/sieve-of-eratosthenes-in-scala.html">Sieve of Eratosthenes in Scala</a><br/>
-こちらの記事を発見。おお、Stream使うとこんなにもスッキリ書けるんですね。確かに衝撃的。<br/>
-まだまだScala力が足りません。</p>
 ]]></content>
   </entry>
   

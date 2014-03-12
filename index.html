@@ -7,7 +7,8 @@
 	<meta name="author" content="sudix">
 
 	
-	<meta name="description" content="2013/10/23 ruby [Ruby] Rubyで関数合成できるLambdaDriverがかっこよすぎる Rubyで関数合成できると便利なのになぁという場面に出くわして、以前に見て知っていたけど試したことはなかったLambdaDriverを触ってみた。 ( ꒪⌓꒪) ゆるよろ日記 & &hellip;">
+	<meta name="description" content="2014/03/12 finagle, go, node.js, scala, spray GoとかScalaとかNode.JSとかでベンチマーク 最近、色々API化したいものがあって、何で書けばいいかなぁと考えている。
+とにかく速く、複数のDBから並列でデータをもってきて集約して返す、 &hellip;">
 	
 
   <!-- http://t.co/dKP3o1e -->
@@ -87,6 +88,1574 @@
 			<div class="mid-col-container">
 				<div id="content" class="inner">
 <div itemscope itemtype="http://schema.org/Blog">
+
+
+    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+        <div class="meta">
+                <div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-03-12T19:59:00+09:00" data-updated="true" itemprop="datePublished">2014/03/12</time></div>
+                <div class="tags">
+
+
+	<a class='category' href='/blog/categories/finagle/'>finagle</a>, <a class='category' href='/blog/categories/go/'>go</a>, <a class='category' href='/blog/categories/node-dot-js/'>node.js</a>, <a class='category' href='/blog/categories/scala/'>scala</a>, <a class='category' href='/blog/categories/spray/'>spray</a>
+
+
+</div>
+                
+        </div>
+        <h1 class="title" itemprop="name"><a href="/blog/2014/03/12/frame-work-benchmark/" itemprop="url">GoとかScalaとかNode.JSとかでベンチマーク</a></h1>
+        <div class="entry-content" itemprop="articleBody">
+                <p>最近、色々API化したいものがあって、何で書けばいいかなぁと考えている。
+とにかく速く、複数のDBから並列でデータをもってきて集約して返す、ようなのを作りたい。
+そんな事考えているとき、こんなブログをみつけた。</p>
+
+<p><a href="http://blog.safariflow.com/2013/02/22/go-as-an-alternative-to-node-js-for-very-fast-servers/">Go as an alternative to Node.js for Very Fast Servers | Safari Flow Blog</a></p>
+
+<p>なかなか興味深いので、GoとNode.jsの他にも、気になっていたFinagleとかも入れて、
+自分も同じようにベンチマークを取ってみた。</p>
+
+<hr />
+
+<h1>disclaimer(いいわけ)</h1>
+
+<p>ベンチマークのとり方ははそんなに厳密にとっているわけでありません。カジュアルな感じで。
+サーバもクライアント(Apache Bench)も同一マシンで実行しちゃってます。
+もっとこうすべきとかあれば教えてください。
+あと、計測結果は長くなりすぎたので、最後に置いています。</p>
+
+<hr />
+
+<h1>測定について</h1>
+
+<h2>実行方法</h2>
+
+<p>元ブログと同じように、httpで1MBのコンテンツを返すだけのAPIを作り、
+Apache Benchで測定する。測定結果は5回連続実行後の最後のものを使用。
+メモリの使用量を見るため、<a href="http://d.hatena.ne.jp/naoya/20080727/1217119867">procfs</a>で
+最大物理メモリ使用量も見る。</p>
+
+<h2>マシンスペック</h2>
+
+<table>
+  <tbody>
+    <tr>
+      <td>CPU&nbsp;</td>
+      <td>Core i7-2600</td>
+    </tr>
+    <tr>
+      <td>メモリ&nbsp;</td>
+      <td>８GB</td>
+    </tr>
+    <tr>
+      <td>OS&nbsp;</td>
+      <td>Ubuntu 13.10 64bit</td>
+    </tr>
+  </tbody>
+</table>
+
+
+<h2>バージョン等</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>言語・FW名</th>
+      <th>バージョン</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Go&nbsp;</td>
+      <td>go1.2 linux/amd64</td>
+    </tr>
+    <tr>
+      <td>Node.js&nbsp;</td>
+      <td>v0.10.26</td>
+    </tr>
+    <tr>
+      <td>Scala&nbsp;</td>
+      <td>2.10.3</td>
+    </tr>
+    <tr>
+      <td>Finagle&nbsp;</td>
+      <td>6.12.1</td>
+    </tr>
+    <tr>
+      <td>Spray&nbsp;</td>
+      <td>1.1.0</td>
+    </tr>
+  </tbody>
+</table>
+
+
+<hr />
+
+<h1>登場選手たち</h1>
+
+<h2>Go</h2>
+
+<ul>
+<li><a href="http://golang.org/">The Go Programming Language</a></li>
+</ul>
+
+
+<p>最近噂のGoogle生まれのあいつ。C++の代替を狙っていたのに、
+なぜかPythonistaやRubyistからばかり注目されてるとか。
+小さな言語仕様、お手軽な並列処理などが特徴。</p>
+
+<p>※テストコードは元ブログのコードをそのまま流用。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kn">package</span> <span class="nx">main</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="s">&quot;net/http&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">bytes</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">([]</span><span class="kt">byte</span><span class="p">,</span> <span class="mi">1024</span><span class="o">*</span><span class="mi">1024</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="p">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="nx">bytes</span><span class="p">);</span> <span class="nx">i</span><span class="o">++</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">bytes</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="p">=</span> <span class="mi">100</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">http</span><span class="p">.</span><span class="nx">HandleFunc</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">,</span> <span class="kd">func</span><span class="p">(</span><span class="nx">w</span> <span class="nx">http</span><span class="p">.</span><span class="nx">ResponseWriter</span><span class="p">,</span> <span class="nx">r</span> <span class="o">*</span><span class="nx">http</span><span class="p">.</span><span class="nx">Request</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">w</span><span class="p">.</span><span class="nx">Write</span><span class="p">(</span><span class="nx">bytes</span><span class="p">)</span>
+</span><span class='line'>  <span class="p">})</span>
+</span><span class='line'>  <span class="nx">http</span><span class="p">.</span><span class="nx">ListenAndServe</span><span class="p">(</span><span class="s">&quot;:8000&quot;</span><span class="p">,</span> <span class="kc">nil</span><span class="p">)</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Go/Martini</h2>
+
+<ul>
+<li><a href="http://martini.codegangsta.io/">Martini &ndash; Classy web development in Go.</a></li>
+</ul>
+
+
+<p>気になっていたGo用軽量WEBフレームワーク。ついでに試してみた。
+Sinatra風味。なんせ公式サイトがかっこいい。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kn">package</span> <span class="nx">main</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="p">(</span>
+</span><span class='line'>  <span class="s">&quot;github.com/codegangsta/martini&quot;</span>
+</span><span class='line'>  <span class="s">&quot;net/http&quot;</span>
+</span><span class='line'><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">bytes</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">([]</span><span class="kt">byte</span><span class="p">,</span> <span class="mi">1024</span><span class="o">*</span><span class="mi">1024</span><span class="p">)</span>
+</span><span class='line'>  <span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="p">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="nx">bytes</span><span class="p">);</span> <span class="nx">i</span><span class="o">++</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">bytes</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="p">=</span> <span class="mi">100</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="nx">m</span> <span class="o">:=</span> <span class="nx">martini</span><span class="p">.</span><span class="nx">Classic</span><span class="p">()</span>
+</span><span class='line'>  <span class="nx">m</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">,</span> <span class="kd">func</span><span class="p">()</span> <span class="p">[]</span><span class="kt">byte</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">return</span> <span class="nx">bytes</span>
+</span><span class='line'>  <span class="p">})</span>
+</span><span class='line'>  <span class="c1">//m.Run() これで起動するとポートは3000</span>
+</span><span class='line'>  <span class="nx">http</span><span class="p">.</span><span class="nx">ListenAndServe</span><span class="p">(</span><span class="s">&quot;:8000&quot;</span><span class="p">,</span> <span class="nx">m</span><span class="p">)</span> <span class="c1">//ポートを指定したい場合はこっち</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Node.js</h2>
+
+<ul>
+<li><a href="http://nodejs.org/">node.js</a></li>
+</ul>
+
+
+<p>ブラウザ界の住人だったはずのあいつが、サーバサイドにもやってきた。
+自分はJavaScriptは苦手だしあまり好きじゃないと思っていたけれど、少し触ってみたらなかなか楽しい。
+ブラウザ側でJavaScriptを極めた方々からすれば、
+サーバサイドまで全て同一言語で完結できるのはまさに夢のようだろうなぁと思う。</p>
+
+<p>※テストコードは元ブログのコードをそのまま流用。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='javascript'><span class='line'><span class="nx">http</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;http&#39;</span><span class="p">)</span>
+</span><span class='line'><span class="nx">Buffer</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;buffer&#39;</span><span class="p">).</span><span class="nx">Buffer</span><span class="p">;</span>
+</span><span class='line'><span class="nx">n</span> <span class="o">=</span> <span class="mi">1024</span><span class="o">*</span><span class="mi">1024</span><span class="p">;</span>
+</span><span class='line'><span class="nx">b</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Buffer</span><span class="p">(</span><span class="nx">n</span><span class="p">);</span>
+</span><span class='line'><span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">n</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="nx">b</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nx">http</span><span class="p">.</span><span class="nx">createServer</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="nx">res</span><span class="p">.</span><span class="nx">writeHead</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+</span><span class='line'>  <span class="nx">res</span><span class="p">.</span><span class="nx">end</span><span class="p">(</span><span class="nx">b</span><span class="p">);</span>
+</span><span class='line'><span class="p">}).</span><span class="nx">listen</span><span class="p">(</span><span class="mi">8000</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Scala/Finagle</h2>
+
+<ul>
+<li><a href="http://twitter.github.io/finagle/">Finagle</a></li>
+</ul>
+
+
+<p>FinagleはTwitterのバックエンドで使われてるすごいやつらしい。</p>
+
+<p><a href="https://blog.twitter.com/2011/finagle-a-protocol-agnostic-rpc-system">Finagle: A Protocol-Agnostic RPC System | Twitter Blogs</a></p>
+
+<p><a href="http://blog.oskarsson.nu/post/40196324612/the-twitter-stack">The Twitter stack &ndash; Braindump</a></p>
+
+<p>あのサイトのトラフィックをさばいてるんだからさぞかし凄いんだろう。
+ZooKeeprと連携したり、各種Metricsを取れるようになってたり、ただものではない感がある。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="k">package</span> <span class="nn">jp.sudix.finagle.benchmark</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">import</span> <span class="nn">com.twitter.finagle.Service</span>
+</span><span class='line'><span class="k">import</span> <span class="nn">com.twitter.finagle.http.Http</span>
+</span><span class='line'><span class="k">import</span> <span class="nn">com.twitter.util.Future</span>
+</span><span class='line'><span class="k">import</span> <span class="nn">com.twitter.finagle.builder.ServerBuilder</span>
+</span><span class='line'><span class="k">import</span> <span class="nn">org.jboss.netty.handler.codec.http.</span><span class="o">{</span><span class="nc">DefaultHttpResponse</span><span class="o">,</span> <span class="nc">HttpVersion</span><span class="o">,</span> <span class="nc">HttpResponseStatus</span><span class="o">,</span> <span class="nc">HttpRequest</span><span class="o">,</span> <span class="nc">HttpResponse</span><span class="o">}</span>
+</span><span class='line'><span class="k">import</span> <span class="nn">org.jboss.netty.buffer.ChannelBuffers.copiedBuffer</span>
+</span><span class='line'><span class="k">import</span> <span class="nn">java.net.</span><span class="o">{</span><span class="nc">SocketAddress</span><span class="o">,</span> <span class="nc">InetSocketAddress</span><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">object</span> <span class="nc">Main</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">def</span> <span class="n">main</span><span class="o">(</span><span class="n">args</span><span class="k">:</span> <span class="kt">Array</span><span class="o">[</span><span class="kt">String</span><span class="o">])</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">val</span> <span class="n">bytes</span><span class="k">:</span> <span class="kt">Array</span><span class="o">[</span><span class="kt">Byte</span><span class="o">]</span> <span class="k">=</span> <span class="nc">Array</span><span class="o">.</span><span class="n">fill</span><span class="o">(</span><span class="mi">1024</span><span class="o">*</span><span class="mi">1024</span><span class="o">)(</span><span class="mi">100</span><span class="k">:</span><span class="kt">Byte</span><span class="o">)</span>
+</span><span class='line'>    <span class="k">val</span> <span class="n">cb</span> <span class="k">=</span> <span class="n">copiedBuffer</span><span class="o">(</span><span class="n">bytes</span><span class="o">)</span>
+</span><span class='line'>    <span class="k">val</span> <span class="n">response</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">DefaultHttpResponse</span><span class="o">(</span><span class="nc">HttpVersion</span><span class="o">.</span><span class="nc">HTTP_1_1</span><span class="o">,</span>
+</span><span class='line'>                                           <span class="nc">HttpResponseStatus</span><span class="o">.</span><span class="nc">OK</span><span class="o">)</span>
+</span><span class='line'>    <span class="n">response</span><span class="o">.</span><span class="n">setContent</span><span class="o">(</span><span class="n">cb</span><span class="o">)</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">val</span> <span class="n">service</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">Service</span><span class="o">[</span><span class="kt">HttpRequest</span>, <span class="kt">HttpResponse</span><span class="o">]</span> <span class="o">{</span>
+</span><span class='line'>      <span class="k">def</span> <span class="n">apply</span><span class="o">(</span><span class="n">request</span><span class="k">:</span> <span class="kt">HttpRequest</span><span class="o">)</span> <span class="k">=</span> <span class="o">{</span>
+</span><span class='line'>        <span class="nc">Future</span><span class="o">.</span><span class="n">value</span><span class="o">(</span><span class="n">response</span><span class="o">)</span>
+</span><span class='line'>      <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">val</span> <span class="n">address</span><span class="k">:</span> <span class="kt">SocketAddress</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">InetSocketAddress</span><span class="o">(</span><span class="mi">8000</span><span class="o">)</span>
+</span><span class='line'>    <span class="nc">ServerBuilder</span><span class="o">()</span>
+</span><span class='line'>      <span class="o">.</span><span class="n">codec</span><span class="o">(</span><span class="nc">Http</span><span class="o">())</span>
+</span><span class='line'>      <span class="o">.</span><span class="n">bindTo</span><span class="o">(</span><span class="n">address</span><span class="o">)</span>
+</span><span class='line'>      <span class="o">.</span><span class="n">name</span><span class="o">(</span><span class="s">&quot;HttpServer&quot;</span><span class="o">)</span>
+</span><span class='line'>      <span class="o">.</span><span class="n">build</span><span class="o">(</span><span class="n">service</span><span class="o">)</span>
+</span><span class='line'>  <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Scala/Spray</h2>
+
+<ul>
+<li><a href="http://spray.io/">spray | REST/HTTP for your Akka/Scala Actors</a></li>
+</ul>
+
+
+<p>これもScala用フレームワーク。AkkaというActorを使った非同期フレームワーク。
+Finagleのなんでもできるよ感と違って、REST APIを作るのに特化してるっぽい。</p>
+
+<p>*サンプルプロジェクトをちょっといじっただけ</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="k">package</span> <span class="nn">com.example</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">import</span> <span class="nn">akka.actor.</span><span class="o">{</span><span class="nc">ActorSystem</span><span class="o">,</span> <span class="nc">Props</span><span class="o">}</span>
+</span><span class='line'><span class="k">import</span> <span class="nn">akka.io.IO</span>
+</span><span class='line'><span class="k">import</span> <span class="nn">spray.can.Http</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">object</span> <span class="nc">Boot</span> <span class="k">extends</span> <span class="nc">App</span> <span class="o">{</span>
+</span><span class='line'>  <span class="k">implicit</span> <span class="k">val</span> <span class="n">system</span> <span class="k">=</span> <span class="nc">ActorSystem</span><span class="o">(</span><span class="s">&quot;on-spray-can&quot;</span><span class="o">)</span>
+</span><span class='line'>  <span class="k">val</span> <span class="n">service</span> <span class="k">=</span> <span class="n">system</span><span class="o">.</span><span class="n">actorOf</span><span class="o">(</span><span class="nc">Props</span><span class="o">[</span><span class="kt">MyServiceActor</span><span class="o">],</span> <span class="s">&quot;demo-service&quot;</span><span class="o">)</span>
+</span><span class='line'>  <span class="nc">IO</span><span class="o">(</span><span class="nc">Http</span><span class="o">)</span> <span class="o">!</span> <span class="nc">Http</span><span class="o">.</span><span class="nc">Bind</span><span class="o">(</span><span class="n">service</span><span class="o">,</span> <span class="n">interface</span> <span class="k">=</span> <span class="s">&quot;localhost&quot;</span><span class="o">,</span> <span class="n">port</span> <span class="k">=</span> <span class="mi">8000</span><span class="o">)</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+</pre></td><td class='code'><pre><code class='scala'><span class='line'><span class="k">package</span> <span class="nn">com.example</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">import</span> <span class="nn">akka.actor.Actor</span>
+</span><span class='line'><span class="k">import</span> <span class="nn">spray.routing._</span>
+</span><span class='line'><span class="k">import</span> <span class="nn">spray.http._</span>
+</span><span class='line'><span class="k">import</span> <span class="nn">MediaTypes._</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">class</span> <span class="nc">MyServiceActor</span> <span class="k">extends</span> <span class="nc">Actor</span> <span class="k">with</span> <span class="nc">MyService</span> <span class="o">{</span>
+</span><span class='line'>  <span class="k">def</span> <span class="n">actorRefFactory</span> <span class="k">=</span> <span class="n">context</span>
+</span><span class='line'>  <span class="k">def</span> <span class="n">receive</span> <span class="k">=</span> <span class="n">runRoute</span><span class="o">(</span><span class="n">myRoute</span><span class="o">)</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">trait</span> <span class="nc">MyService</span> <span class="k">extends</span> <span class="nc">HttpService</span> <span class="o">{</span>
+</span><span class='line'>  <span class="k">val</span> <span class="n">bytes</span><span class="k">:</span> <span class="kt">Array</span><span class="o">[</span><span class="kt">Byte</span><span class="o">]</span> <span class="k">=</span> <span class="nc">Array</span><span class="o">.</span><span class="n">fill</span><span class="o">(</span><span class="mi">1024</span><span class="o">*</span><span class="mi">1024</span><span class="o">)(</span><span class="mi">100</span><span class="k">:</span><span class="kt">Byte</span><span class="o">)</span>
+</span><span class='line'>  <span class="k">val</span> <span class="n">myRoute</span> <span class="k">=</span>
+</span><span class='line'>    <span class="n">path</span><span class="o">(</span><span class="s">&quot;&quot;</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>      <span class="n">get</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">respondWithMediaType</span><span class="o">(</span><span class="n">`text/html`</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>          <span class="n">complete</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">bytes</span>
+</span><span class='line'>          <span class="o">}</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>      <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<hr />
+
+<h1>結果一覧</h1>
+
+<p>下記のコマンドを実行した結果</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>ab -c 100 -n 10000 http://localhost:8000/
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<table>
+  <thead>
+    <tr>
+      <th>言語・FW</th>
+      <th>実行時間(秒)</th>
+      <th>処理数/秒</th>
+      <th>応答時間(ミリ秒)</th>
+      <th>物理メモリ使用量(KB)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Go&nbsp;</td>
+      <td>4.312</td>
+      <td>2319.10</td>
+      <td>43.120</td>
+      <td>8084</td>
+    </tr>
+    <tr>
+      <td>Go/Martini&nbsp;</td>
+      <td>4.757</td>
+      <td>2102.27</td>
+      <td>45.475</td>
+      <td>7928</td>
+    </tr>
+    <tr>
+      <td>Node.js&nbsp;</td>
+      <td>4.346</td>
+      <td>2300.74</td>
+      <td>43.464</td>
+      <td>56892</td>
+    </tr>
+    <tr>
+      <td>Scala/Finagle&nbsp;</td>
+      <td>7.682</td>
+      <td>1301.69</td>
+      <td>76.823</td>
+      <td>807656</td>
+    </tr>
+    <tr>
+      <td>Scala/Spray&nbsp;</td>
+      <td>6.184</td>
+      <td>1146.31</td>
+      <td>61.843</td>
+      <td>833040</td>
+    </tr>
+  </tbody>
+</table>
+
+
+<hr />
+
+<h1>感想</h1>
+
+<p>GoやNode.jsと比べるとScala勢が遅い感じがするけど、FinagleやSprayは重量級で機能豊富なフレームワークだと思うので、
+同じ土俵で比べるのは酷だった気がする。実際はDBからデータ取ってきたりというステップが入るので、
+速度差は埋まっていくだろうし、性能的にはどれ使っても問題無い気がしている。
+Scalaのメモリ使用量が多すぎる気がするけど、JVMアプリのメモリ測定方法は、今回のでは正確に出ないのかも。
+この程度のベンチマークでどれを採用するかまでは決められないけれど、Goのメモリフットプリントの少なさはいいなと思う。
+どれか一つ選べと言われたら、Go/Martiniあたりがいいかなぁ。
+なんかGoはサクサク書けて気持ちいい。</p>
+
+<hr />
+
+<h1>結果詳細</h1>
+
+<h2>Go</h2>
+
+<h3>結果</h3>
+
+<h4>ab</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>ab -c 100 -n 10000 http://localhost:8000/
+</span><span class='line'>This is ApacheBench, Version 2.3 &lt;<span class="nv">$Revision</span>: 1430300 <span class="nv">$&gt;</span>
+</span><span class='line'>Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+</span><span class='line'>Licensed to The Apache Software Foundation, http://www.apache.org/
+</span><span class='line'>
+</span><span class='line'>Benchmarking localhost <span class="o">(</span>be patient<span class="o">)</span>
+</span><span class='line'>Completed 1000 requests
+</span><span class='line'>Completed 2000 requests
+</span><span class='line'>Completed 3000 requests
+</span><span class='line'>Completed 4000 requests
+</span><span class='line'>Completed 5000 requests
+</span><span class='line'>Completed 6000 requests
+</span><span class='line'>Completed 7000 requests
+</span><span class='line'>Completed 8000 requests
+</span><span class='line'>Completed 9000 requests
+</span><span class='line'>Completed 10000 requests
+</span><span class='line'>Finished 10000 requests
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>Server Software:
+</span><span class='line'>Server Hostname:        localhost
+</span><span class='line'>Server Port:            8000
+</span><span class='line'>
+</span><span class='line'>Document Path:          /
+</span><span class='line'>Document Length:        1048576 bytes
+</span><span class='line'>
+</span><span class='line'>Concurrency Level:      100
+</span><span class='line'>Time taken <span class="k">for </span>tests:   4.312 seconds
+</span><span class='line'>Complete requests:      10000
+</span><span class='line'>Failed requests:        0
+</span><span class='line'>Write errors:           0
+</span><span class='line'>Total transferred:      10486730000 bytes
+</span><span class='line'>HTML transferred:       10485760000 bytes
+</span><span class='line'>Requests per second:    2319.10 <span class="o">[</span><span class="c">#/sec] (mean)</span>
+</span><span class='line'>Time per request:       43.120 <span class="o">[</span>ms<span class="o">]</span> <span class="o">(</span>mean<span class="o">)</span>
+</span><span class='line'>Time per request:       0.431 <span class="o">[</span>ms<span class="o">]</span> <span class="o">(</span>mean, across all concurrent requests<span class="o">)</span>
+</span><span class='line'>Transfer rate:          2374973.45 <span class="o">[</span>Kbytes/sec<span class="o">]</span> received
+</span><span class='line'>
+</span><span class='line'>Connection Times <span class="o">(</span>ms<span class="o">)</span>
+</span><span class='line'>              min  mean<span class="o">[</span>+/-sd<span class="o">]</span> median   max
+</span><span class='line'>Connect:        0    1   0.5      1      11
+</span><span class='line'>Processing:    13   42   2.6     42      74
+</span><span class='line'>Waiting:        0    1   2.2      1      33
+</span><span class='line'>Total:         14   43   2.7     43      76
+</span><span class='line'>
+</span><span class='line'>Percentage of the requests served within a certain <span class="nb">time</span> <span class="o">(</span>ms<span class="o">)</span>
+</span><span class='line'>  50%     43
+</span><span class='line'>  66%     43
+</span><span class='line'>  75%     43
+</span><span class='line'>  80%     44
+</span><span class='line'>  90%     44
+</span><span class='line'>  95%     45
+</span><span class='line'>  98%     46
+</span><span class='line'>  99%     48
+</span><span class='line'> 100%     76 <span class="o">(</span>longest request<span class="o">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>procfs</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>cat /proc/<span class="sb">`</span>pgrep -lf <span class="s1">&#39;go_server&#39;</span> | awk <span class="s1">&#39;{print $1}&#39;</span><span class="sb">`</span>/status
+</span><span class='line'>Name: go_server
+</span><span class='line'>State:    S <span class="o">(</span>sleeping<span class="o">)</span>
+</span><span class='line'>Tgid: 14952
+</span><span class='line'>Pid:  14952
+</span><span class='line'>PPid: 6925
+</span><span class='line'>TracerPid:    0
+</span><span class='line'>Uid:  1000    1000    1000    1000
+</span><span class='line'>Gid:  1000    1000    1000    1000
+</span><span class='line'>FDSize:   256
+</span><span class='line'>Groups:   4 24 27 30 46 108 109 1000
+</span><span class='line'>VmPeak:     239304 kB
+</span><span class='line'>VmSize:     185236 kB
+</span><span class='line'>VmLck:           0 kB
+</span><span class='line'>VmPin:           0 kB
+</span><span class='line'>VmHWM:        8084 kB
+</span><span class='line'>VmRSS:        8084 kB
+</span><span class='line'>VmData:     174376 kB
+</span><span class='line'>VmStk:         140 kB
+</span><span class='line'>VmExe:        1452 kB
+</span><span class='line'>VmLib:        2012 kB
+</span><span class='line'>VmPTE:          80 kB
+</span><span class='line'>VmSwap:          0 kB
+</span><span class='line'>Threads:  5
+</span><span class='line'>SigQ: 0/63671
+</span><span class='line'>SigPnd:   0000000000000000
+</span><span class='line'>ShdPnd:   0000000000000000
+</span><span class='line'>SigBlk:   0000000000000000
+</span><span class='line'>SigIgn:   0000000000000000
+</span><span class='line'>SigCgt:   ffffffffffc1feff
+</span><span class='line'>CapInh:   0000000000000000
+</span><span class='line'>CapPrm:   0000000000000000
+</span><span class='line'>CapEff:   0000000000000000
+</span><span class='line'>CapBnd:   0000001fffffffff
+</span><span class='line'>Seccomp:  0
+</span><span class='line'>Cpus_allowed: ffffffff,ffffffff
+</span><span class='line'>Cpus_allowed_list:    0-63
+</span><span class='line'>Mems_allowed: 00000000,00000001
+</span><span class='line'>Mems_allowed_list:    0
+</span><span class='line'>voluntary_ctxt_switches:  9951
+</span><span class='line'>nonvoluntary_ctxt_switches:   7772
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Go/Martini</h2>
+
+<h3>結果</h3>
+
+<h4>ab</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>ab -c 100 -n 10000 http://localhost:8000/
+</span><span class='line'>This is ApacheBench, Version 2.3 &lt;<span class="nv">$Revision</span>: 1430300 <span class="nv">$&gt;</span>
+</span><span class='line'>Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+</span><span class='line'>Licensed to The Apache Software Foundation, http://www.apache.org/
+</span><span class='line'>
+</span><span class='line'>Benchmarking localhost <span class="o">(</span>be patient<span class="o">)</span>
+</span><span class='line'>Completed 1000 requests
+</span><span class='line'>Completed 2000 requests
+</span><span class='line'>Completed 3000 requests
+</span><span class='line'>Completed 4000 requests
+</span><span class='line'>Completed 5000 requests
+</span><span class='line'>Completed 6000 requests
+</span><span class='line'>Completed 7000 requests
+</span><span class='line'>Completed 8000 requests
+</span><span class='line'>Completed 9000 requests
+</span><span class='line'>Completed 10000 requests
+</span><span class='line'>Finished 10000 requests
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>Server Software:
+</span><span class='line'>Server Hostname:        localhost
+</span><span class='line'>Server Port:            8000
+</span><span class='line'>
+</span><span class='line'>Document Path:          /
+</span><span class='line'>Document Length:        1048576 bytes
+</span><span class='line'>
+</span><span class='line'>Concurrency Level:      100
+</span><span class='line'>Time taken <span class="k">for </span>tests:   4.757 seconds
+</span><span class='line'>Complete requests:      10000
+</span><span class='line'>Failed requests:        0
+</span><span class='line'>Write errors:           0
+</span><span class='line'>Total transferred:      10486730000 bytes
+</span><span class='line'>HTML transferred:       10485760000 bytes
+</span><span class='line'>Requests per second:    2102.27 <span class="o">[</span><span class="c">#/sec] (mean)</span>
+</span><span class='line'>Time per request:       47.568 <span class="o">[</span>ms<span class="o">]</span> <span class="o">(</span>mean<span class="o">)</span>
+</span><span class='line'>Time per request:       0.476 <span class="o">[</span>ms<span class="o">]</span> <span class="o">(</span>mean, across all concurrent requests<span class="o">)</span>
+</span><span class='line'>Transfer rate:          2152920.42 <span class="o">[</span>Kbytes/sec<span class="o">]</span> received
+</span><span class='line'>
+</span><span class='line'>Connection Times <span class="o">(</span>ms<span class="o">)</span>
+</span><span class='line'>              min  mean<span class="o">[</span>+/-sd<span class="o">]</span> median   max
+</span><span class='line'>Connect:        0    1   0.5      1       6
+</span><span class='line'>Processing:     5   47   8.5     47      88
+</span><span class='line'>Waiting:        0   14  14.6      8      54
+</span><span class='line'>Total:          8   47   8.5     48      88
+</span><span class='line'>
+</span><span class='line'>Percentage of the requests served within a certain <span class="nb">time</span> <span class="o">(</span>ms<span class="o">)</span>
+</span><span class='line'>  50%     48
+</span><span class='line'>  66%     50
+</span><span class='line'>  75%     52
+</span><span class='line'>  80%     53
+</span><span class='line'>  90%     57
+</span><span class='line'>  95%     62
+</span><span class='line'>  98%     67
+</span><span class='line'>  99%     71
+</span><span class='line'> 100%     88 <span class="o">(</span>longest request<span class="o">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>procfs</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>cat /proc/<span class="sb">`</span>pgrep -lf <span class="s1">&#39;martini_server&#39;</span> | awk <span class="s1">&#39;{print $1}&#39;</span><span class="sb">`</span>/status
+</span><span class='line'>Name: martini_server
+</span><span class='line'>State:    S <span class="o">(</span>sleeping<span class="o">)</span>
+</span><span class='line'>Tgid: 14745
+</span><span class='line'>Pid:  14745
+</span><span class='line'>PPid: 6925
+</span><span class='line'>TracerPid:    0
+</span><span class='line'>Uid:  1000    1000    1000    1000
+</span><span class='line'>Gid:  1000    1000    1000    1000
+</span><span class='line'>FDSize:   256
+</span><span class='line'>Groups:   4 24 27 30 46 108 109 1000
+</span><span class='line'>VmPeak:     242100 kB
+</span><span class='line'>VmSize:     185852 kB
+</span><span class='line'>VmLck:           0 kB
+</span><span class='line'>VmPin:           0 kB
+</span><span class='line'>VmHWM:        9064 kB
+</span><span class='line'>VmRSS:        9064 kB
+</span><span class='line'>VmData:     174376 kB
+</span><span class='line'>VmStk:         140 kB
+</span><span class='line'>VmExe:        1632 kB
+</span><span class='line'>VmLib:        2012 kB
+</span><span class='line'>VmPTE:          80 kB
+</span><span class='line'>VmSwap:          0 kB
+</span><span class='line'>Threads:  5
+</span><span class='line'>SigQ: 0/63671
+</span><span class='line'>SigPnd:   0000000000000000
+</span><span class='line'>ShdPnd:   0000000000000000
+</span><span class='line'>SigBlk:   0000000000000000
+</span><span class='line'>SigIgn:   0000000000000000
+</span><span class='line'>SigCgt:   ffffffffffc1feff
+</span><span class='line'>CapInh:   0000000000000000
+</span><span class='line'>CapPrm:   0000000000000000
+</span><span class='line'>CapEff:   0000000000000000
+</span><span class='line'>CapBnd:   0000001fffffffff
+</span><span class='line'>Seccomp:  0
+</span><span class='line'>Cpus_allowed: ffffffff,ffffffff
+</span><span class='line'>Cpus_allowed_list:    0-63
+</span><span class='line'>Mems_allowed: 00000000,00000001
+</span><span class='line'>Mems_allowed_list:    0
+</span><span class='line'>voluntary_ctxt_switches:  985
+</span><span class='line'>nonvoluntary_ctxt_switches:   17704
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Node.js</h2>
+
+<h3>結果</h3>
+
+<h4>ab</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>ab -c 100 -n 10000 http://localhost:8000/
+</span><span class='line'>This is ApacheBench, Version 2.3 &lt;<span class="nv">$Revision</span>: 1430300 <span class="nv">$&gt;</span>
+</span><span class='line'>Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+</span><span class='line'>Licensed to The Apache Software Foundation, http://www.apache.org/
+</span><span class='line'>
+</span><span class='line'>Benchmarking localhost <span class="o">(</span>be patient<span class="o">)</span>
+</span><span class='line'>Completed 1000 requests
+</span><span class='line'>Completed 2000 requests
+</span><span class='line'>Completed 3000 requests
+</span><span class='line'>Completed 4000 requests
+</span><span class='line'>Completed 5000 requests
+</span><span class='line'>Completed 6000 requests
+</span><span class='line'>Completed 7000 requests
+</span><span class='line'>Completed 8000 requests
+</span><span class='line'>Completed 9000 requests
+</span><span class='line'>Completed 10000 requests
+</span><span class='line'>Finished 10000 requests
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>Server Software:
+</span><span class='line'>Server Hostname:        localhost
+</span><span class='line'>Server Port:            8000
+</span><span class='line'>
+</span><span class='line'>Document Path:          /
+</span><span class='line'>Document Length:        1048576 bytes
+</span><span class='line'>
+</span><span class='line'>Concurrency Level:      100
+</span><span class='line'>Time taken <span class="k">for </span>tests:   4.346 seconds
+</span><span class='line'>Complete requests:      10000
+</span><span class='line'>Failed requests:        0
+</span><span class='line'>Write errors:           0
+</span><span class='line'>Total transferred:      10486510000 bytes
+</span><span class='line'>HTML transferred:       10485760000 bytes
+</span><span class='line'>Requests per second:    2300.74 <span class="o">[</span><span class="c">#/sec] (mean)</span>
+</span><span class='line'>Time per request:       43.464 <span class="o">[</span>ms<span class="o">]</span> <span class="o">(</span>mean<span class="o">)</span>
+</span><span class='line'>Time per request:       0.435 <span class="o">[</span>ms<span class="o">]</span> <span class="o">(</span>mean, across all concurrent requests<span class="o">)</span>
+</span><span class='line'>Transfer rate:          2356128.80 <span class="o">[</span>Kbytes/sec<span class="o">]</span> received
+</span><span class='line'>
+</span><span class='line'>Connection Times <span class="o">(</span>ms<span class="o">)</span>
+</span><span class='line'>              min  mean<span class="o">[</span>+/-sd<span class="o">]</span> median   max
+</span><span class='line'>Connect:        0    0   0.4      1       5
+</span><span class='line'>Processing:    16   43   6.2     45      60
+</span><span class='line'>Waiting:        0   14  12.9     13      41
+</span><span class='line'>Total:         17   43   6.5     46      60
+</span><span class='line'>ERROR: The median and mean <span class="k">for </span>the initial connection <span class="nb">time </span>are more than twice the standard
+</span><span class='line'>       deviation apart. These results are NOT reliable.
+</span><span class='line'>
+</span><span class='line'>Percentage of the requests served within a certain <span class="nb">time</span> <span class="o">(</span>ms<span class="o">)</span>
+</span><span class='line'>  50%     46
+</span><span class='line'>  66%     49
+</span><span class='line'>  75%     49
+</span><span class='line'>  80%     49
+</span><span class='line'>  90%     50
+</span><span class='line'>  95%     51
+</span><span class='line'>  98%     54
+</span><span class='line'>  99%     55
+</span><span class='line'> 100%     60 <span class="o">(</span>longest request<span class="o">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>procfs</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>cat /proc/<span class="sb">`</span>pgrep -lf <span class="s1">&#39;nodejs node_server.js&#39;</span> | awk <span class="s1">&#39;{print $1}&#39;</span><span class="sb">`</span>/status
+</span><span class='line'>Name: nodejs
+</span><span class='line'>State:    S <span class="o">(</span>sleeping<span class="o">)</span>
+</span><span class='line'>Tgid: 14860
+</span><span class='line'>Pid:  14860
+</span><span class='line'>PPid: 6925
+</span><span class='line'>TracerPid:    0
+</span><span class='line'>Uid:  1000    1000    1000    1000
+</span><span class='line'>Gid:  1000    1000    1000    1000
+</span><span class='line'>FDSize:   256
+</span><span class='line'>Groups:   4 24 27 30 46 108 109 1000
+</span><span class='line'>VmPeak:     720076 kB
+</span><span class='line'>VmSize:     672132 kB
+</span><span class='line'>VmLck:           0 kB
+</span><span class='line'>VmPin:           0 kB
+</span><span class='line'>VmHWM:       56892 kB
+</span><span class='line'>VmRSS:       56892 kB
+</span><span class='line'>VmData:     645248 kB
+</span><span class='line'>VmStk:         140 kB
+</span><span class='line'>VmExe:        8132 kB
+</span><span class='line'>VmLib:        4168 kB
+</span><span class='line'>VmPTE:         264 kB
+</span><span class='line'>VmSwap:          0 kB
+</span><span class='line'>Threads:  2
+</span><span class='line'>SigQ: 0/63671
+</span><span class='line'>SigPnd:   0000000000000000
+</span><span class='line'>ShdPnd:   0000000000000000
+</span><span class='line'>SigBlk:   0000000000000000
+</span><span class='line'>SigIgn:   0000000000001000
+</span><span class='line'>SigCgt:   0000000188004202
+</span><span class='line'>CapInh:   0000000000000000
+</span><span class='line'>CapPrm:   0000000000000000
+</span><span class='line'>CapEff:   0000000000000000
+</span><span class='line'>CapBnd:   0000001fffffffff
+</span><span class='line'>Seccomp:  0
+</span><span class='line'>Cpus_allowed: ffffffff,ffffffff
+</span><span class='line'>Cpus_allowed_list:    0-63
+</span><span class='line'>Mems_allowed: 00000000,00000001
+</span><span class='line'>Mems_allowed_list:    0
+</span><span class='line'>voluntary_ctxt_switches:  6389
+</span><span class='line'>nonvoluntary_ctxt_switches:   7180
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Scala/Finagle</h2>
+
+<h3>結果</h3>
+
+<h4>起動スクリプト</h4>
+
+<p>sbt-assemblyで固めて実行。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>java -jar ./target/scala-2.10/FinageBenchmark-assembly-1.0.jar
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>ab</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>ab -c 100 -n 10000 http://localhost:8000/
+</span><span class='line'>This is ApacheBench, Version 2.3 &lt;<span class="nv">$Revision</span>: 1430300 <span class="nv">$&gt;</span>
+</span><span class='line'>Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+</span><span class='line'>Licensed to The Apache Software Foundation, http://www.apache.org/
+</span><span class='line'>
+</span><span class='line'>Benchmarking localhost <span class="o">(</span>be patient<span class="o">)</span>
+</span><span class='line'>Completed 1000 requests
+</span><span class='line'>Completed 2000 requests
+</span><span class='line'>Completed 3000 requests
+</span><span class='line'>Completed 4000 requests
+</span><span class='line'>Completed 5000 requests
+</span><span class='line'>Completed 6000 requests
+</span><span class='line'>Completed 7000 requests
+</span><span class='line'>Completed 8000 requests
+</span><span class='line'>Completed 9000 requests
+</span><span class='line'>Completed 10000 requests
+</span><span class='line'>Finished 10000 requests
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>Server Software:
+</span><span class='line'>Server Hostname:        localhost
+</span><span class='line'>Server Port:            8000
+</span><span class='line'>
+</span><span class='line'>Document Path:          /
+</span><span class='line'>Document Length:        1048576 bytes
+</span><span class='line'>
+</span><span class='line'>Concurrency Level:      100
+</span><span class='line'>Time taken <span class="k">for </span>tests:   7.682 seconds
+</span><span class='line'>Complete requests:      10000
+</span><span class='line'>Failed requests:        0
+</span><span class='line'>Write errors:           0
+</span><span class='line'>Total transferred:      10485950000 bytes
+</span><span class='line'>HTML transferred:       10485760000 bytes
+</span><span class='line'>Requests per second:    1301.69 <span class="o">[</span><span class="c">#/sec] (mean)</span>
+</span><span class='line'>Time per request:       76.823 <span class="o">[</span>ms<span class="o">]</span> <span class="o">(</span>mean<span class="o">)</span>
+</span><span class='line'>Time per request:       0.768 <span class="o">[</span>ms<span class="o">]</span> <span class="o">(</span>mean, across all concurrent requests<span class="o">)</span>
+</span><span class='line'>Transfer rate:          1332958.99 <span class="o">[</span>Kbytes/sec<span class="o">]</span> received
+</span><span class='line'>
+</span><span class='line'>Connection Times <span class="o">(</span>ms<span class="o">)</span>
+</span><span class='line'>              min  mean<span class="o">[</span>+/-sd<span class="o">]</span> median   max
+</span><span class='line'>Connect:        0    1   0.5      1       5
+</span><span class='line'>Processing:     7   75   5.9     75     153
+</span><span class='line'>Waiting:        1    3   4.4      2      82
+</span><span class='line'>Total:         11   77   5.9     76     155
+</span><span class='line'>
+</span><span class='line'>Percentage of the requests served within a certain <span class="nb">time</span> <span class="o">(</span>ms<span class="o">)</span>
+</span><span class='line'>  50%     76
+</span><span class='line'>  66%     77
+</span><span class='line'>  75%     78
+</span><span class='line'>  80%     79
+</span><span class='line'>  90%     80
+</span><span class='line'>  95%     82
+</span><span class='line'>  98%     86
+</span><span class='line'>  99%     92
+</span><span class='line'> 100%    155 <span class="o">(</span>longest request<span class="o">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>procfs</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>cat /proc/<span class="sb">`</span>pgrep -lf <span class="s1">&#39;FinageBenchmark-assembly-1.0.jar&#39;</span> | awk <span class="s1">&#39;{print $1}&#39;</span><span class="sb">`</span>/status
+</span><span class='line'>Name: java
+</span><span class='line'>State:    S <span class="o">(</span>sleeping<span class="o">)</span>
+</span><span class='line'>Tgid: 15132
+</span><span class='line'>Pid:  15132
+</span><span class='line'>PPid: 15017
+</span><span class='line'>TracerPid:    0
+</span><span class='line'>Uid:  1000    1000    1000    1000
+</span><span class='line'>Gid:  1000    1000    1000    1000
+</span><span class='line'>FDSize:   256
+</span><span class='line'>Groups:   4 24 27 30 46 108 109 1000
+</span><span class='line'>VmPeak:    3993828 kB
+</span><span class='line'>VmSize:    3936516 kB
+</span><span class='line'>VmLck:           0 kB
+</span><span class='line'>VmPin:           0 kB
+</span><span class='line'>VmHWM:      807656 kB
+</span><span class='line'>VmRSS:      726864 kB
+</span><span class='line'>VmData:    3878388 kB
+</span><span class='line'>VmStk:         140 kB
+</span><span class='line'>VmExe:           4 kB
+</span><span class='line'>VmLib:       15552 kB
+</span><span class='line'>VmPTE:        1868 kB
+</span><span class='line'>VmSwap:          0 kB
+</span><span class='line'>Threads:  25
+</span><span class='line'>SigQ: 0/63671
+</span><span class='line'>SigPnd:   0000000000000000
+</span><span class='line'>ShdPnd:   0000000000000000
+</span><span class='line'>SigBlk:   0000000000000000
+</span><span class='line'>SigIgn:   0000000000000000
+</span><span class='line'>SigCgt:   2000000181005ccf
+</span><span class='line'>CapInh:   0000000000000000
+</span><span class='line'>CapPrm:   0000000000000000
+</span><span class='line'>CapEff:   0000000000000000
+</span><span class='line'>CapBnd:   0000001fffffffff
+</span><span class='line'>Seccomp:  0
+</span><span class='line'>Cpus_allowed: ffffffff,ffffffff
+</span><span class='line'>Cpus_allowed_list:    0-63
+</span><span class='line'>Mems_allowed: 00000000,00000001
+</span><span class='line'>Mems_allowed_list:    0
+</span><span class='line'>voluntary_ctxt_switches:  5
+</span><span class='line'>nonvoluntary_ctxt_switches:   6
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Scala/Spray</h2>
+
+<h3>結果</h3>
+
+<h4>起動スクリプト</h4>
+
+<p>sbt-assemblyで固めて実行。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>java -jar ./target/scala-2.10/spray_benchmark-assembly-0.1.jar
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>ab</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>ab -c 100 -n 10000 http://localhost:8000/
+</span><span class='line'>This is ApacheBench, Version 2.3 &lt;<span class="nv">$Revision</span>: 1430300 <span class="nv">$&gt;</span>
+</span><span class='line'>Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+</span><span class='line'>Licensed to The Apache Software Foundation, http://www.apache.org/
+</span><span class='line'>
+</span><span class='line'>Benchmarking localhost <span class="o">(</span>be patient<span class="o">)</span>
+</span><span class='line'>Completed 1000 requests
+</span><span class='line'>Completed 2000 requests
+</span><span class='line'>Completed 3000 requests
+</span><span class='line'>Completed 4000 requests
+</span><span class='line'>Completed 5000 requests
+</span><span class='line'>Completed 6000 requests
+</span><span class='line'>Completed 7000 requests
+</span><span class='line'>Completed 8000 requests
+</span><span class='line'>Completed 9000 requests
+</span><span class='line'>Completed 10000 requests
+</span><span class='line'>Finished 10000 requests
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>Server Software:        spray-can/1.1.0
+</span><span class='line'>Server Hostname:        localhost
+</span><span class='line'>Server Port:            8000
+</span><span class='line'>
+</span><span class='line'>Document Path:          /
+</span><span class='line'>Document Length:        1048576 bytes
+</span><span class='line'>
+</span><span class='line'>Concurrency Level:      100
+</span><span class='line'>Time taken <span class="k">for </span>tests:   6.184 seconds
+</span><span class='line'>Complete requests:      10000
+</span><span class='line'>Failed requests:        0
+</span><span class='line'>Write errors:           0
+</span><span class='line'>Total transferred:      10487070000 bytes
+</span><span class='line'>HTML transferred:       10485760000 bytes
+</span><span class='line'>Requests per second:    1617.00 <span class="o">[</span><span class="c">#/sec] (mean)</span>
+</span><span class='line'>Time per request:       61.843 <span class="o">[</span>ms<span class="o">]</span> <span class="o">(</span>mean<span class="o">)</span>
+</span><span class='line'>Time per request:       0.618 <span class="o">[</span>ms<span class="o">]</span> <span class="o">(</span>mean, across all concurrent requests<span class="o">)</span>
+</span><span class='line'>Transfer rate:          1656013.76 <span class="o">[</span>Kbytes/sec<span class="o">]</span> received
+</span><span class='line'>
+</span><span class='line'>Connection Times <span class="o">(</span>ms<span class="o">)</span>
+</span><span class='line'>              min  mean<span class="o">[</span>+/-sd<span class="o">]</span> median   max
+</span><span class='line'>Connect:        0    1   0.4      1       5
+</span><span class='line'>Processing:     7   61   8.4     60     105
+</span><span class='line'>Waiting:        1    6   7.2      3      52
+</span><span class='line'>Total:         11   62   8.4     61     106
+</span><span class='line'>
+</span><span class='line'>Percentage of the requests served within a certain <span class="nb">time</span> <span class="o">(</span>ms<span class="o">)</span>
+</span><span class='line'>  50%     61
+</span><span class='line'>  66%     63
+</span><span class='line'>  75%     65
+</span><span class='line'>  80%     66
+</span><span class='line'>  90%     70
+</span><span class='line'>  95%     76
+</span><span class='line'>  98%     82
+</span><span class='line'>  99%     85
+</span><span class='line'> 100%    106 <span class="o">(</span>longest request<span class="o">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>procfs</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>cat /proc/<span class="sb">`</span>pgrep -lf <span class="s1">&#39;spray_benchmark-assembly-0.1.jar&#39;</span> | awk <span class="s1">&#39;{print $1}&#39;</span><span class="sb">`</span>/status
+</span><span class='line'>Name: java
+</span><span class='line'>State:    S <span class="o">(</span>sleeping<span class="o">)</span>
+</span><span class='line'>Tgid: 15264
+</span><span class='line'>Pid:  15264
+</span><span class='line'>PPid: 15017
+</span><span class='line'>TracerPid:    0
+</span><span class='line'>Uid:  1000    1000    1000    1000
+</span><span class='line'>Gid:  1000    1000    1000    1000
+</span><span class='line'>FDSize:   256
+</span><span class='line'>Groups:   4 24 27 30 46 108 109 1000
+</span><span class='line'>VmPeak:    4130404 kB
+</span><span class='line'>VmSize:    4130400 kB
+</span><span class='line'>VmLck:           0 kB
+</span><span class='line'>VmPin:           0 kB
+</span><span class='line'>VmHWM:      833040 kB
+</span><span class='line'>VmRSS:      832932 kB
+</span><span class='line'>VmData:    4069920 kB
+</span><span class='line'>VmStk:         140 kB
+</span><span class='line'>VmExe:           4 kB
+</span><span class='line'>VmLib:       15804 kB
+</span><span class='line'>VmPTE:        1948 kB
+</span><span class='line'>VmSwap:          0 kB
+</span><span class='line'>Threads:  22
+</span><span class='line'>SigQ: 0/63671
+</span><span class='line'>SigPnd:   0000000000000000
+</span><span class='line'>ShdPnd:   0000000000000000
+</span><span class='line'>SigBlk:   0000000000000000
+</span><span class='line'>SigIgn:   0000000000000000
+</span><span class='line'>SigCgt:   2000000181005ccf
+</span><span class='line'>CapInh:   0000000000000000
+</span><span class='line'>CapPrm:   0000000000000000
+</span><span class='line'>CapEff:   0000000000000000
+</span><span class='line'>CapBnd:   0000001fffffffff
+</span><span class='line'>Seccomp:  0
+</span><span class='line'>Cpus_allowed: ffffffff,ffffffff
+</span><span class='line'>Cpus_allowed_list:    0-63
+</span><span class='line'>Mems_allowed: 00000000,00000001
+</span><span class='line'>Mems_allowed_list:    0
+</span><span class='line'>voluntary_ctxt_switches:  5
+</span><span class='line'>nonvoluntary_ctxt_switches:   2
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+                
+                
+        </div>
+
+</article>
 
 
     <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
@@ -1282,7 +2851,7 @@ object Hoge {
 </nav></div>
 			</div>
 			<footer id="footer" class="inner"><p>
-  Copyright &copy; 2013 - sudix -
+  Copyright &copy; 2014 - sudix -
   <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
 </p>
 
