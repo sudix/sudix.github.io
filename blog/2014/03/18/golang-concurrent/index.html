@@ -1,0 +1,342 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>golang_concurrent - Sudix's Blog</title>
+	<meta name="author" content="sudix">
+
+	
+	<meta name="description" content="Golang_concurrent <img src="http://b.hatena.ne.jp/entry/image/http://sudix.github.io/blog/2014/03/18/golang-concurrent/" alt="はてなブックマーク - &hellip;">
+	
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link href="/atom.xml" rel="alternate" title="Sudix's Blog" type="application/atom+xml">
+	
+	<link rel="canonical" href="http://sudix.github.io/blog/2014/03/18/golang-concurrent/">
+	<link href="/favicon.png" rel="shortcut icon">
+	<link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans:400italic,400,700' rel='stylesheet' type='text/css'>
+	<!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="http://fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="http://fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+</head>
+
+
+<body>
+	<div class="container">
+		<div class="left-col">
+			<div class="intrude-less">
+			<header id="header" class="inner"><div class="profilepic">
+        <script src="/javascripts/md5.js"></script>
+        <script type="text/javascript">
+                $(function(){
+                        $('.profilepic').append("<img src='http://www.gravatar.com/avatar/" + MD5("sudix7755@gmail.com") + "?s=160' alt='Profile Picture' style='width: 160px;' />");
+                });
+        </script>
+</div>
+<hgroup>
+  <h1><a href="/">Sudix's Blog</a></h1>
+  
+    <h2>about pgoramming, It, etc...</h2>
+  
+</hgroup>
+
+<p class="subtitle">about pgoramming, It, etc...</p>
+<nav id="main-nav"><ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+<nav id="sub-nav">
+        <div class="social">
+                
+                
+                
+                <a class="twitter" href="http://twitter.com/sudix" title="Twitter">Twitter</a>
+                
+                
+                <a class="github" href="https://github.com/sudix" title="GitHub">GitHub</a>
+                
+                
+                
+                
+                
+                
+                
+                
+                <a class="rss" href="/atom.xml" title="RSS">RSS</a>
+                
+        </div>
+</nav>
+</header>				
+			</div>
+		</div>	
+		<div class="mid-col">
+			
+				
+			
+			<div class="mid-col-container">
+				<div id="content" class="inner"><article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+        <h1 class="title" itemprop="name">Golang_concurrent
+          <a href="http://b.hatena.ne.jp/entry/http://sudix.github.io/blog/2014/03/18/golang-concurrent/">
+            <img src="http://b.hatena.ne.jp/entry/image/http://sudix.github.io/blog/2014/03/18/golang-concurrent/"
+                 alt="はてなブックマーク - golang_concurrent"
+                 title="はてなブックマーク - http://sudix.github.io/blog/2014/03/18/golang-concurrent/" />
+          </a>
+        </h1>
+        <div class="entry-content" itemprop="articleBody"><h1>Goで重い処理を並列実行して実行時間を短くするサンプル</h1>
+
+<p>時間のかかる処理を複数実行して、最後に各処理の結果をがっちゃんこしたい。
+そのまま行うと各処理の実行時間の合計だけかかってしまうので、
+golangで並列で実行する場合のサンプルを書いてみた。</p>
+
+<p>goroutineについてはこちらを参考にさせていただいた。</p>
+
+<p><a href="http://jxck.hatenablog.com/entry/20130414/1365960707">Go の並行処理 &ndash; Block Rockin’ Codes</a></p>
+
+<h2>コード</h2>
+
+<p>main.go</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+</pre></td><td class='code'><pre><code class='go'><span class='line'><span class="kn">package</span> <span class="nx">main</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">import</span> <span class="p">(</span>
+</span><span class='line'>        <span class="s">&quot;fmt&quot;</span>
+</span><span class='line'>        <span class="s">&quot;time&quot;</span>
+</span><span class='line'><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">wait</span><span class="p">(</span><span class="nx">waitSec</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Duration</span><span class="p">)</span> <span class="o">&lt;-</span><span class="kd">chan</span> <span class="kt">float64</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">ch</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="kt">float64</span><span class="p">)</span>
+</span><span class='line'>        <span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>                <span class="nx">start</span> <span class="o">:=</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Now</span><span class="p">()</span>
+</span><span class='line'>                <span class="nx">time</span><span class="p">.</span><span class="nx">Sleep</span><span class="p">(</span><span class="nx">waitSec</span> <span class="o">*</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">)</span>
+</span><span class='line'>                <span class="nx">end</span> <span class="o">:=</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Now</span><span class="p">()</span>
+</span><span class='line'>                <span class="nx">ch</span> <span class="o">&lt;-</span> <span class="nx">end</span><span class="p">.</span><span class="nx">Sub</span><span class="p">(</span><span class="nx">start</span><span class="p">).</span><span class="nx">Seconds</span><span class="p">()</span>
+</span><span class='line'>        <span class="p">}()</span>
+</span><span class='line'>        <span class="k">return</span> <span class="nx">ch</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">func</span> <span class="nx">main</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="nx">cpus</span> <span class="o">:=</span> <span class="nx">runtime</span><span class="p">.</span><span class="nx">NumCPU</span><span class="p">()</span>
+</span><span class='line'>        <span class="nx">runtime</span><span class="p">.</span><span class="nx">GOMAXPROCS</span><span class="p">(</span><span class="nx">cpus</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="nx">start</span> <span class="o">:=</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Now</span><span class="p">()</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="nx">ch1</span> <span class="o">:=</span> <span class="nx">wait</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+</span><span class='line'>        <span class="nx">ch2</span> <span class="o">:=</span> <span class="nx">wait</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+</span><span class='line'>        <span class="nx">ch3</span> <span class="o">:=</span> <span class="nx">wait</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="nx">ret1</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="nx">ch1</span>
+</span><span class='line'>        <span class="nx">ret2</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="nx">ch2</span>
+</span><span class='line'>        <span class="nx">ret3</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="nx">ch3</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;各処理時間合計 %f sec\n&quot;</span><span class="p">,</span> <span class="nx">ret1</span><span class="o">+</span><span class="nx">ret2</span><span class="o">+</span><span class="nx">ret3</span><span class="p">)</span>
+</span><span class='line'>        <span class="nx">end</span> <span class="o">:=</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Now</span><span class="p">()</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="nx">fmt</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;実時間 %f sec \n&quot;</span><span class="p">,</span> <span class="nx">end</span><span class="p">.</span><span class="nx">Sub</span><span class="p">(</span><span class="nx">start</span><span class="p">).</span><span class="nx">Seconds</span><span class="p">())</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>channelからの結果取り出しでブロックされてるけど、重い処理自体はブロックされずに
+別goroutineで実行されているので、今回の目的ならこれで問題ないはず。</p>
+
+<h2>実行結果</h2>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>go run main.go
+</span><span class='line'>各処理時間合計 18.002096 sec
+</span><span class='line'>実時間 10.000841 sec
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>指定秒数だけ待つ関数を呼んでいる。それぞれ5秒、10秒、3秒なので、
+普通に実行すれば全体で18秒かかるけど、実際には10秒で終わっている。
+今回はSleepしてるだけだからあまり関係ないけど、実際に重い計算をさせる場合は、
+マルチコア環境なら並行に処理が行われて、CPUリソースを活かせる。
+こんなにお手軽に並列処理ができて、goroutineは面白い。</p>
+</div>
+
+</article>
+
+    <div class="share">
+        <div class="addthis_toolbox addthis_default_style">
+
+        <div id="hatena_bookmark_button" class="at300b">
+          <a href="http://b.hatena.ne.jp/entry/http://sudix.github.io/blog/2014/03/18/golang-concurrent/" class="hatena-bookmark-button"
+             data-hatena-bookmark-layout="simple-balloon" title="このエントリーをはてなブックマークに追加">
+            <img src="http://b.st-hatena.com/images/entry-button/button-only.gif"
+                 alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" />
+          </a>
+          <script type="text/javascript" src="http://b.st-hatena.com/js/bookmark_button.js" charset="utf-8" async="async"></script>
+        </div>
+
+        
+        <a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+        
+        
+        <a class="addthis_button_tweet"></a>
+        
+        
+        <a class="addthis_button_google_plusone" g:plusone:size="medium"></a>
+        
+        <a class="addthis_counter addthis_pill_style"></a>
+        </div>
+  <script type="text/javascript" src="http://s7.addthis.com/js/250/addthis_widget.js#pubid="></script>
+</div>
+
+
+
+<div class="recent_posts">
+<h2 class="title">Recent Posts</h1>
+<ul class="posts">  
+    
+    <li>  
+      <span>18 Mar 2014</span> &raquo;  
+        <a href="/blog/2014/03/18/golang-concurrent/">  
+		   golang_concurrent</a>  
+    </li>  
+	  
+    <li>  
+      <span>12 Mar 2014</span> &raquo;  
+        <a href="/blog/2014/03/12/frame-work-benchmark/">  
+		   GoとかScalaとかNode.JSとかでベンチマーク</a>  
+    </li>  
+	  
+    <li>  
+      <span>23 Oct 2013</span> &raquo;  
+        <a href="/blog/2013/10/23/ruby-lambda-driver/">  
+		   [ruby] Rubyで関数合成できるLambdaDriverがかっこよすぎる</a>  
+    </li>  
+	  
+    <li>  
+      <span>18 Oct 2013</span> &raquo;  
+        <a href="/blog/2013/10/18/use-rbenv-on-cron/">  
+		   CentOSでrbenvを使ってバッチのRubyバージョンを切り替える</a>  
+    </li>  
+	  
+    <li>  
+      <span>13 Sep 2013</span> &raquo;  
+        <a href="/blog/2013/09/13/javascript-the-definitive-guide-6th/">  
+		   [書評] JavaScript The Definitive Guide 6th</a>  
+    </li>  
+	  
+</ul>
+</div>
+
+<hr>
+
+
+<section id="comment">
+    <h1 class="title">Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+</section>
+
+
+
+</div>
+			</div>
+			<footer id="footer" class="inner"><p>
+  Copyright &copy; 2014 - sudix -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+Design credit: <a href="http://shashankmehta.in/archive/2012/greyshade.html">Shashank Mehta</a>
+</footer>
+			<script src="/javascripts/slash.js"></script>
+<script src="/javascripts/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+})(jQuery);
+</script> <!-- Delete or comment this line to disable Fancybox -->
+
+
+<script type="text/javascript">
+      var disqus_shortname = 'sudixsblog';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://sudix.github.io/blog/2014/03/18/golang-concurrent/';
+        var disqus_url = 'http://sudix.github.io/blog/2014/03/18/golang-concurrent/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-43018369-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+
+
+		</div>
+	</div>
+</body>
+</html>
