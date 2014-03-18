@@ -4,7 +4,7 @@
   <title><![CDATA[Sudix's Blog]]></title>
   <link href="http://sudix.github.io/atom.xml" rel="self"/>
   <link href="http://sudix.github.io/"/>
-  <updated>2014-03-18T16:01:45+09:00</updated>
+  <updated>2014-03-18T16:04:20+09:00</updated>
   <id>http://sudix.github.io/</id>
   <author>
     <name><![CDATA[sudix]]></name>
@@ -14,13 +14,11 @@
 
   
   <entry>
-    <title type="html"><![CDATA[golang_concurrent]]></title>
+    <title type="html"><![CDATA[Goで重い処理を並列実行して実行時間を短くするサンプル]]></title>
     <link href="http://sudix.github.io/blog/2014/03/18/golang-concurrent/"/>
     <updated>2014-03-18T20:59:00+09:00</updated>
     <id>http://sudix.github.io/blog/2014/03/18/golang-concurrent</id>
-    <content type="html"><![CDATA[<h1>Goで重い処理を並列実行して実行時間を短くするサンプル</h1>
-
-<p>時間のかかる処理を複数実行して、最後に各処理の結果をがっちゃんこしたい。
+    <content type="html"><![CDATA[<p>時間のかかる処理を複数実行して、最後に各処理の結果をがっちゃんこしたい。
 そのまま行うと各処理の実行時間の合計だけかかってしまうので、
 golangで並列で実行する場合のサンプルを書いてみた。</p>
 

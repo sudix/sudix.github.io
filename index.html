@@ -7,7 +7,8 @@
 	<meta name="author" content="sudix">
 
 	
-	<meta name="description" content="2014/03/18 concurrent, golang, goroutine Golang_concurrent Goで重い処理を並列実行して実行時間を短くするサンプル 時間のかかる処理を複数実行して、最後に各処理の結果をがっちゃんこしたい。 &hellip;">
+	<meta name="description" content="2014/03/18 concurrent, golang, goroutine Goで重い処理を並列実行して実行時間を短くするサンプル 時間のかかる処理を複数実行して、最後に各処理の結果をがっちゃんこしたい。
+そのまま行うと各処理の実行時間の合計だけかかってしまうので、 &hellip;">
 	
 
   <!-- http://t.co/dKP3o1e -->
@@ -113,11 +114,9 @@
 </div>
                 
         </div>
-        <h1 class="title" itemprop="name"><a href="/blog/2014/03/18/golang-concurrent/" itemprop="url">Golang_concurrent</a></h1>
+        <h1 class="title" itemprop="name"><a href="/blog/2014/03/18/golang-concurrent/" itemprop="url">Goで重い処理を並列実行して実行時間を短くするサンプル</a></h1>
         <div class="entry-content" itemprop="articleBody">
-                <h1>Goで重い処理を並列実行して実行時間を短くするサンプル</h1>
-
-<p>時間のかかる処理を複数実行して、最後に各処理の結果をがっちゃんこしたい。
+                <p>時間のかかる処理を複数実行して、最後に各処理の結果をがっちゃんこしたい。
 そのまま行うと各処理の実行時間の合計だけかかってしまうので、
 golangで並列で実行する場合のサンプルを書いてみた。</p>
 
