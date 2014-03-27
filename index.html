@@ -7,8 +7,8 @@
 	<meta name="author" content="sudix">
 
 	
-	<meta name="description" content="2014/03/18 concurrent, golang, goroutine Goで重い処理を並列実行して実行時間を短くするサンプル 時間のかかる処理を複数実行して、最後に各処理の結果をがっちゃんこしたい。
-そのまま行うと各処理の実行時間の合計だけかかってしまうので、 &hellip;">
+	<meta name="description" content="2014/03/27 mysql MySQLダンプからの無停止スレーブ作成 よく行うのでメモ。 マスタとスレーブのホスト名を以下と仮定する。 マスタ： masterdb
+スレーブ： slavedb また、スレーブ対象のDBは以下とする。 some_db_production &hellip;">
 	
 
   <!-- http://t.co/dKP3o1e -->
@@ -88,6 +88,143 @@
 			<div class="mid-col-container">
 				<div id="content" class="inner">
 <div itemscope itemtype="http://schema.org/Blog">
+
+
+    <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+        <div class="meta">
+                <div class="date">
+
+
+
+
+
+
+
+
+  
+
+
+<time datetime="2014-03-27T20:39:00+09:00" data-updated="true" itemprop="datePublished">2014/03/27</time></div>
+                <div class="tags">
+
+
+	<a class='category' href='/blog/categories/mysql/'>mysql</a>
+
+
+</div>
+                
+        </div>
+        <h1 class="title" itemprop="name"><a href="/blog/2014/03/27/mysql-add-slave-from-dump/" itemprop="url">MySQLダンプからの無停止スレーブ作成</a></h1>
+        <div class="entry-content" itemprop="articleBody">
+                <p>よく行うのでメモ。</p>
+
+<p>マスタとスレーブのホスト名を以下と仮定する。</p>
+
+<p>マスタ： masterdb
+スレーブ： slavedb</p>
+
+<p>また、スレーブ対象のDBは以下とする。</p>
+
+<p>some_db_production</p>
+
+<h1>マスタ上のMySQLでの作業</h1>
+
+<h2>レプリケーション用ユーザーの作成</h2>
+
+<p>まだ無ければ作っておく。この例だとどのホストからでも接続できるので、
+必要に応じてIPアドレスでの制限をかけること。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>mysql&gt; GRANT REPLICATION SLAVE ON *.* TO repl_user@<span class="s2">&quot;%&quot;</span> IDENTIFIED BY <span class="s1">&#39;hogehoge&#39;</span>;
+</span><span class='line'>mysql&gt; FLUSH PRIVILEGES;
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>スナップショットの作成(取得しつつスレーブへ送る）</h2>
+
+<p>ダンプを取りながら圧縮しスレーブDBに送り込む。データが多いと数時間かかる。</p>
+
+<p>ここでは転送速度を優先させるため、暗号化方式を軽量のものしている。</p>
+
+<p><a href="http://d.hatena.ne.jp/rx7/20101025/p1">大容量ファイルのSCP転送を高速にする方法 &ndash; 元RX-7乗りの適当な日々</a></p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>mysqldump some_db_production --master-data --single-transaction -uroot -phogehoge | gzip | ssh -c arcfour128 hoge@slavedb <span class="s1">&#39;cat &gt; /home/hoge/db_snapshot.gz&#39;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<hr />
+
+<h1>スレーブでの作業</h1>
+
+<h2>スナップショットのインポート</h2>
+
+<p>解凍しつつインポートする。スナップショットの作成よりもさらに時間がかかる。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>gunzip &lt; /home/hoge/db_snapshot.gz | mysql -u root -p some_db_production
+</span></code></pre></td></tr></table></div></figure>
+
+
+<hr />
+
+<h1>スレーブ上のMySQLでの作業（インポート後）</h1>
+
+<h2>マスタ情報の確認</h2>
+
+<p>後ほど、slaveに設定する情報。lessでgzの中を直接確認できる。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>less /home/hoge/db_snapshot.gz
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>こんな感じで出力されているはず。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>CHANGE MASTER TO <span class="nv">MASTER_LOG_FILE</span><span class="o">=</span><span class="s1">&#39;mysql-bin.0123&#39;</span>, <span class="nv">MASTER_LOG_POS</span><span class="o">=</span>9876;
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>master情報書換</h2>
+
+<p>スレーブDBのmysqlにログインし、以下のコマンドを実行。
+MASTER_LOG_FILEとMASTER_LOG_POSは先に調べた情報に書き換える。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>mysql&gt; RESET SLAVE;
+</span><span class='line'>mysql&gt; CHANGE MASTER TO
+</span><span class='line'>mysql&gt; <span class="nv">MASTER_HOST</span> <span class="o">=</span> <span class="s1">&#39;masterdb&#39;</span>,
+</span><span class='line'>mysql&gt; <span class="nv">MASTER_USER</span> <span class="o">=</span> <span class="s1">&#39;repl_user&#39;</span>,
+</span><span class='line'>mysql&gt; <span class="nv">MASTER_PASSWORD</span> <span class="o">=</span> <span class="s1">&#39;hogehoge&#39;</span>,
+</span><span class='line'>mysql&gt; <span class="nv">MASTER_LOG_FILE</span> <span class="o">=</span> <span class="s1">&#39;mysql-bin.0123&#39;</span>,
+</span><span class='line'>mysql&gt; <span class="nv">MASTER_LOG_POS</span> <span class="o">=</span> 9876;
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>スレーブ再開</h2>
+
+<p>同じくスレーブのmysqlでコマンド実行</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>mysql&gt; start slave;
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+                
+                
+        </div>
+
+</article>
 
 
     <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">

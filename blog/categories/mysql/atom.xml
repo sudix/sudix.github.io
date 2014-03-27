@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: mysql | Sudix's Blog]]></title>
+  <link href="http://sudix.github.io/blog/categories/mysql/atom.xml" rel="self"/>
+  <link href="http://sudix.github.io/"/>
+  <updated>2014-03-27T16:49:22+09:00</updated>
+  <id>http://sudix.github.io/</id>
+  <author>
+    <name><![CDATA[sudix]]></name>
+    <email><![CDATA[sudix7755@gmail.com]]></email>
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[MySQLダンプからの無停止スレーブ作成]]></title>
+    <link href="http://sudix.github.io/blog/2014/03/27/mysql-add-slave-from-dump/"/>
+    <updated>2014-03-27T20:39:00+09:00</updated>
+    <id>http://sudix.github.io/blog/2014/03/27/mysql-add-slave-from-dump</id>
+    <content type="html"><![CDATA[<p>よく行うのでメモ。</p>
+
+<p>マスタとスレーブのホスト名を以下と仮定する。</p>
+
+<p>マスタ： masterdb
+スレーブ： slavedb</p>
+
+<p>また、スレーブ対象のDBは以下とする。</p>
+
+<p>some_db_production</p>
+
+<h1>マスタ上のMySQLでの作業</h1>
+
+<h2>レプリケーション用ユーザーの作成</h2>
+
+<p>まだ無ければ作っておく。この例だとどのホストからでも接続できるので、
+必要に応じてIPアドレスでの制限をかけること。</p>
+
+<p><code>bash
+mysql&gt; GRANT REPLICATION SLAVE ON *.* TO repl_user@"%" IDENTIFIED BY 'hogehoge';
+mysql&gt; FLUSH PRIVILEGES;
+</code></p>
+
+<h2>スナップショットの作成(取得しつつスレーブへ送る）</h2>
+
+<p>ダンプを取りながら圧縮しスレーブDBに送り込む。データが多いと数時間かかる。</p>
+
+<p>ここでは転送速度を優先させるため、暗号化方式を軽量のものしている。</p>
+
+<p><a href="http://d.hatena.ne.jp/rx7/20101025/p1">大容量ファイルのSCP転送を高速にする方法 &ndash; 元RX-7乗りの適当な日々</a></p>
+
+<p><code>bash
+mysqldump some_db_production --master-data --single-transaction -uroot -phogehoge | gzip | ssh -c arcfour128 hoge@slavedb 'cat &gt; /home/hoge/db_snapshot.gz'
+</code></p>
+
+<hr />
+
+<h1>スレーブでの作業</h1>
+
+<h2>スナップショットのインポート</h2>
+
+<p>解凍しつつインポートする。スナップショットの作成よりもさらに時間がかかる。</p>
+
+<p><code>bash
+gunzip &lt; /home/hoge/db_snapshot.gz | mysql -u root -p some_db_production
+</code></p>
+
+<hr />
+
+<h1>スレーブ上のMySQLでの作業（インポート後）</h1>
+
+<h2>マスタ情報の確認</h2>
+
+<p>後ほど、slaveに設定する情報。lessでgzの中を直接確認できる。</p>
+
+<p><code>bash
+less /home/hoge/db_snapshot.gz
+</code></p>
+
+<p>こんな感じで出力されているはず。</p>
+
+<p><code>bash
+CHANGE MASTER TO MASTER_LOG_FILE='mysql-bin.0123', MASTER_LOG_POS=9876;
+</code></p>
+
+<h2>master情報書換</h2>
+
+<p>スレーブDBのmysqlにログインし、以下のコマンドを実行。
+MASTER_LOG_FILEとMASTER_LOG_POSは先に調べた情報に書き換える。</p>
+
+<p><code>bash
+mysql&gt; RESET SLAVE;
+mysql&gt; CHANGE MASTER TO
+mysql&gt; MASTER_HOST = 'masterdb',
+mysql&gt; MASTER_USER = 'repl_user',
+mysql&gt; MASTER_PASSWORD = 'hogehoge',
+mysql&gt; MASTER_LOG_FILE = 'mysql-bin.0123',
+mysql&gt; MASTER_LOG_POS = 9876;
+</code></p>
+
+<h2>スレーブ再開</h2>
+
+<p>同じくスレーブのmysqlでコマンド実行</p>
+
+<p><code>bash
+mysql&gt; start slave;
+</code></p>
+]]></content>
+  </entry>
+  
+</feed>
